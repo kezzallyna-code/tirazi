@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { UserPreviewSidebar } from '@/components/user-preview/UserPreviewSidebar';
 import { UserOverview } from '@/components/user-preview/UserOverview';
 import { createClient } from '@/utils/supabase/client';
+import { ExploreProvider, useExplore } from '@/components/explore/ExploreContext';
+import { PostCard } from '@/components/explore/PostCard';
 
 interface Project {
   id: string;
@@ -16,7 +18,8 @@ interface Project {
   image: string;
 }
 
-export default function UserPreviewPage() {
+function UserPreviewPageContent() {
+  const { posts, savedPostIds } = useExplore();
   const [activeTab, setActiveTab] = useState<string>('overview');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState<string | null>(null);
@@ -39,6 +42,7 @@ export default function UserPreviewPage() {
   });
 
   const [projects, setProjects] = useState<Project[]>([]);
+  const [savedProjects, setSavedProjects] = useState<Project[]>([]);
 
   // Selected subscription plan
   const [selectedPlan, setSelectedPlan] = useState<string>('free');
@@ -69,8 +73,8 @@ export default function UserPreviewPage() {
 
         if (profileData) {
           setProfile({
-            fullName: profileData.full_name || 'Artisan',
-            roles: profileData.profile_roles?.map((pr: any) => pr.roles?.name) || ['Textile Professional'],
+            fullName: profileData.full_name || 'Lina Benyahia',
+            roles: profileData.profile_roles?.map((pr: any) => pr.roles?.name) || ['Fashion Designer'],
             wilaya: profileData.wilaya || 'Alger',
             experience: profileData.experience_level || 'Experienced',
             bio: profileData.bio || 'Passionate about textile arts.',
@@ -103,6 +107,38 @@ export default function UserPreviewPage() {
             image: p.project_media?.[0]?.media_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=256'
           }));
           setProjects(formattedProjects);
+        }
+
+        // Fetch Saved Projects
+        const { data: savedProjectsData } = await supabase
+          .from('saved_projects')
+          .select(`
+            project_id,
+            projects (
+              id,
+              title,
+              category_id,
+              wilaya,
+              project_media ( media_url )
+            )
+          `)
+          .eq('profile_id', session.user.id);
+
+        if (savedProjectsData) {
+          const formattedSavedProjects = savedProjectsData.map((sp: any) => {
+            const p = sp.projects;
+            if (!p) return null;
+            return {
+              id: p.id,
+              title: p.title,
+              category: 'Project',
+              wilaya: p.wilaya || 'Alger',
+              views: 0,
+              appreciations: 0,
+              image: p.project_media?.[0]?.media_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=256'
+            };
+          }).filter(Boolean);
+          setSavedProjects(formattedSavedProjects);
         }
       }
     };
@@ -283,7 +319,8 @@ export default function UserPreviewPage() {
           </div>
         );
 
-      case 'posts':
+      case 'posts': {
+        const myPosts = currentUser ? posts.filter((post) => post.artisan.id === currentUser.id) : [];
         return (
           <div className="bg-white dark:bg-surface-container-low p-8 rounded-[24px] border border-outline-variant/10 shadow-sm space-y-6 animate-in fade-in duration-300">
             <div>
@@ -291,23 +328,35 @@ export default function UserPreviewPage() {
               <p className="text-[12px] text-on-surface-variant/80 mt-0.5">Manage the text thought updates or questions you shared.</p>
             </div>
             
-            <div className="py-16 text-center border-2 border-dashed border-outline-variant/30 rounded-2xl text-on-surface-variant/50 max-w-sm mx-auto space-y-4">
-              <span className="material-symbols-outlined text-[48px] text-outline/25">feed</span>
-              <div className="space-y-1">
-                <p className="font-title-lg text-sm text-on-surface font-bold">You have not shared any posts yet.</p>
-                <p className="text-[11px] text-on-surface-variant/80">Share your first thought, textile tip, or atelier update.</p>
+            {myPosts.length > 0 ? (
+              <div className="space-y-6">
+                {myPosts.map((post) => (
+                  <PostCard key={post.id} post={post} />
+                ))}
               </div>
-              <Link
-                href="/explore"
-                className="px-6 py-2 bg-primary text-on-primary rounded-full font-label-md text-xs shadow-sm hover:bg-primary-dark transition-all active:scale-95 inline-block"
-              >
-                Create a Post
-              </Link>
-            </div>
+            ) : (
+              <div className="py-16 text-center border-2 border-dashed border-outline-variant/30 rounded-2xl text-on-surface-variant/50 max-w-sm mx-auto space-y-4">
+                <span className="material-symbols-outlined text-[48px] text-outline/25">feed</span>
+                <div className="space-y-1">
+                  <p className="font-title-lg text-sm text-on-surface font-bold">You have not shared any posts yet.</p>
+                  <p className="text-[11px] text-on-surface-variant/80">Share your first thought, textile tip, or atelier update.</p>
+                </div>
+                <Link
+                  href="/explore"
+                  className="px-6 py-2 bg-primary text-on-primary rounded-full font-label-md text-xs shadow-sm hover:bg-primary-dark transition-all active:scale-95 inline-block"
+                >
+                  Create a Post
+                </Link>
+              </div>
+            )}
           </div>
         );
+      }
 
-      case 'saved':
+      case 'saved': {
+        const savedPostsList = posts.filter(post => savedPostIds.includes(post.id));
+        const hasSaved = savedPostsList.length > 0 || savedProjects.length > 0;
+        
         return (
           <div className="bg-white dark:bg-surface-container-low p-8 rounded-[24px] border border-outline-variant/10 shadow-sm space-y-6 animate-in fade-in duration-300">
             <div>
@@ -315,21 +364,80 @@ export default function UserPreviewPage() {
               <p className="text-[12px] text-on-surface-variant/80 mt-0.5">Quickly revisit and filter saved posts and projects.</p>
             </div>
             
-            <div className="py-16 text-center border-2 border-dashed border-outline-variant/30 rounded-2xl text-on-surface-variant/50 max-w-sm mx-auto space-y-4">
-              <span className="material-symbols-outlined text-[48px] text-outline/25">bookmark</span>
-              <div className="space-y-1">
-                <p className="font-title-lg text-sm text-on-surface font-bold">No saved inspirations yet.</p>
-                <p className="text-[11px] text-on-surface-variant/80">Save posts from Explore to revisit them here.</p>
+            {hasSaved ? (
+              <div className="space-y-10">
+                {savedPostsList.length > 0 && (
+                  <div className="space-y-4">
+                    <h4 className="font-title-md text-primary font-serif">Saved Posts</h4>
+                    <div className="space-y-6">
+                      {savedPostsList.map((post) => (
+                        <PostCard key={post.id} post={post} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {savedProjects.length > 0 && (
+                  <div className="space-y-4">
+                    <h4 className="font-title-md text-primary font-serif">Saved Projects</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {savedProjects.map((proj) => (
+                        <div key={proj.id} className="bg-white dark:bg-surface-container-lowest rounded-[24px] border border-outline-variant/10 overflow-hidden shadow-sm flex flex-col group hover:-translate-y-1 transition-all duration-300">
+                          <div className="relative h-36 bg-surface-container-high overflow-hidden">
+                            <img src={proj.image} alt={proj.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                          </div>
+                          <div className="p-4 flex flex-col flex-grow">
+                            <span className="text-[9px] font-bold text-primary uppercase tracking-wider mb-1">{proj.category}</span>
+                            <h4 className="font-label-md text-on-surface font-bold line-clamp-1 leading-normal mb-1">{proj.title}</h4>
+                            <p className="text-[10px] text-on-surface-variant flex items-center gap-0.5 mb-4">
+                              <span className="material-symbols-outlined text-[12px]">location_on</span>
+                              {proj.wilaya}
+                            </p>
+                            <div className="flex items-center justify-between mt-auto pt-3 border-t border-outline-variant/5">
+                              <div className="flex gap-2 text-[10px] text-on-surface-variant/75">
+                                <span className="flex items-center gap-0.5"><span className="material-symbols-outlined text-[12px]">visibility</span>{proj.views}</span>
+                                <span className="flex items-center gap-0.5"><span className="material-symbols-outlined text-[12px]">thumb_up</span>{proj.appreciations}</span>
+                              </div>
+                              <Link
+                                href="/projects"
+                                className="px-3 py-1 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-full font-label-md text-[10px] transition-colors"
+                              >
+                                View
+                              </Link>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-              <Link
-                href="/explore"
-                className="px-6 py-2 border border-primary text-primary hover:bg-primary/5 rounded-full font-label-md text-xs transition-all active:scale-95 inline-block"
-              >
-                Explore Community
-              </Link>
-            </div>
+            ) : (
+              <div className="py-16 text-center border-2 border-dashed border-outline-variant/30 rounded-2xl text-on-surface-variant/50 max-w-sm mx-auto space-y-4">
+                <span className="material-symbols-outlined text-[48px] text-outline/25">bookmark</span>
+                <div className="space-y-1">
+                  <p className="font-title-lg text-sm text-on-surface font-bold">No saved inspirations yet.</p>
+                  <p className="text-[11px] text-on-surface-variant/80">Save posts or projects to revisit them here.</p>
+                </div>
+                <div className="flex gap-3 justify-center">
+                  <Link
+                    href="/explore"
+                    className="px-6 py-2 border border-primary text-primary hover:bg-primary/5 rounded-full font-label-md text-xs transition-all active:scale-95 inline-block"
+                  >
+                    Explore Posts
+                  </Link>
+                  <Link
+                    href="/projects"
+                    className="px-6 py-2 border border-primary text-primary hover:bg-primary/5 rounded-full font-label-md text-xs transition-all active:scale-95 inline-block"
+                  >
+                    Explore Projects
+                  </Link>
+                </div>
+              </div>
+            )}
           </div>
         );
+      }
 
       case 'messages':
         return (
@@ -339,36 +447,17 @@ export default function UserPreviewPage() {
               <p className="text-[12px] text-on-surface-variant/80 mt-0.5">Private conversations with artisans and designers.</p>
             </div>
 
-            <div className="divide-y divide-outline-variant/15 border border-outline-variant/15 rounded-2xl overflow-hidden bg-surface-container/10">
-              <div className="p-4 flex gap-4 items-center">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-sm">NC</div>
-                <div className="flex-grow min-w-0">
-                  <div className="flex justify-between items-baseline mb-0.5">
-                    <span className="font-label-md text-xs text-on-surface font-bold truncate">Nadia Cherif</span>
-                    <span className="text-[10px] text-on-surface-variant/60">2 hours ago</span>
-                  </div>
-                  <p className="text-[11px] text-on-surface-variant truncate">I loved your Karakou pattern outlines. Are you available for contract work?</p>
-                </div>
+            <div className="py-16 text-center border-2 border-dashed border-outline-variant/30 rounded-2xl text-on-surface-variant/50 max-w-sm mx-auto space-y-4">
+              <span className="material-symbols-outlined text-[48px] text-outline/25">mail</span>
+              <div className="space-y-1">
+                <p className="font-title-lg text-sm text-on-surface font-bold">No messages yet.</p>
+                <p className="text-[11px] text-on-surface-variant/80">When you connect with artisans, your conversations will appear here.</p>
               </div>
-              <div className="p-4 flex gap-4 items-center">
-                <div className="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center font-bold text-secondary text-sm">OM</div>
-                <div className="flex-grow min-w-0">
-                  <div className="flex justify-between items-baseline mb-0.5">
-                    <span className="font-label-md text-xs text-on-surface font-bold truncate">Omar Mansour</span>
-                    <span className="text-[10px] text-on-surface-variant/60">1 day ago</span>
-                  </div>
-                  <p className="text-[11px] text-on-surface-variant truncate">We are shipping the leather samples to Algiers tomorrow.</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="pt-2">
               <Link
                 href="/messages"
-                className="px-6 py-2.5 bg-primary text-on-primary rounded-full font-label-md text-xs shadow-sm hover:bg-primary-dark transition-all active:scale-95 flex items-center gap-1.5 w-fit"
+                className="px-6 py-2 border border-primary text-primary hover:bg-primary/5 rounded-full font-label-md text-xs transition-all active:scale-95 inline-block"
               >
-                <span className="material-symbols-outlined text-[16px]">mail</span>
-                Open Messages
+                Open Inbox
               </Link>
             </div>
           </div>
@@ -386,55 +475,27 @@ export default function UserPreviewPage() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div className="p-4 bg-surface-container/30 rounded-xl border border-outline-variant/5">
                 <span className="text-on-surface-variant/70 block text-[10px] uppercase tracking-wider mb-1">Profile Views</span>
-                <span className="text-xl font-bold text-primary">1,248</span>
+                <span className="text-xl font-bold text-primary">0</span>
               </div>
               <div className="p-4 bg-surface-container/30 rounded-xl border border-outline-variant/5">
                 <span className="text-on-surface-variant/70 block text-[10px] uppercase tracking-wider mb-1">Unique Visitors</span>
-                <span className="text-xl font-bold text-primary">840</span>
+                <span className="text-xl font-bold text-primary">0</span>
               </div>
               <div className="p-4 bg-surface-container/30 rounded-xl border border-outline-variant/5">
                 <span className="text-on-surface-variant/70 block text-[10px] uppercase tracking-wider mb-1">Portfolio Views</span>
-                <span className="text-xl font-bold text-primary">482</span>
+                <span className="text-xl font-bold text-primary">0</span>
               </div>
               <div className="p-4 bg-surface-container/30 rounded-xl border border-outline-variant/5">
                 <span className="text-on-surface-variant/70 block text-[10px] uppercase tracking-wider mb-1">New Followers</span>
-                <span className="text-xl font-bold text-primary">12</span>
+                <span className="text-xl font-bold text-primary">0</span>
               </div>
             </div>
 
             {/* Recent Profile Visitors */}
             <div className="space-y-4 pt-2">
               <h4 className="font-title-lg text-[15px] text-primary font-serif">Recent Profile Visitors</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {/* Visitor 1 */}
-                <div className="p-4 border border-outline-variant/20 rounded-2xl flex items-center gap-3 bg-surface-container/10">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary shrink-0 text-xs">NC</div>
-                  <div className="min-w-0 space-y-0.5">
-                    <p className="font-label-md text-xs text-on-surface font-bold truncate">Nadia Cherif</p>
-                    <p className="text-[10px] text-on-surface-variant truncate">Master Weaver &middot; Oran</p>
-                    <p className="text-[9px] text-on-surface-variant/50">2 hours ago</p>
-                  </div>
-                </div>
-
-                {/* Visitor 2 */}
-                <div className="p-4 border border-outline-variant/20 rounded-2xl flex items-center gap-3 bg-surface-container/10">
-                  <div className="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center font-bold text-secondary shrink-0 text-xs">OM</div>
-                  <div className="min-w-0 space-y-0.5">
-                    <p className="font-label-md text-xs text-on-surface font-bold truncate">Omar Mansour</p>
-                    <p className="text-[10px] text-on-surface-variant truncate">Leather Artisan &middot; Medea</p>
-                    <p className="text-[9px] text-on-surface-variant/50">1 day ago</p>
-                  </div>
-                </div>
-
-                {/* Visitor 3 */}
-                <div className="p-4 border border-outline-variant/20 rounded-2xl flex items-center gap-3 bg-surface-container/10">
-                  <div className="w-10 h-10 rounded-full bg-tertiary/10 flex items-center justify-center font-bold text-tertiary shrink-0 text-xs">YO</div>
-                  <div className="min-w-0 space-y-0.5">
-                    <p className="font-label-md text-xs text-on-surface font-bold truncate">Yasmine Oualid</p>
-                    <p className="text-[10px] text-on-surface-variant truncate">Styliste &middot; Alger</p>
-                    <p className="text-[9px] text-on-surface-variant/50">2 days ago</p>
-                  </div>
-                </div>
+              <div className="py-6 text-center text-on-surface-variant/50 border border-outline-variant/20 rounded-2xl bg-surface-container/10">
+                <p className="text-sm">No recent profile visitors to show.</p>
               </div>
             </div>
 
@@ -536,7 +597,13 @@ export default function UserPreviewPage() {
           
           {/* Sidebar */}
           <div className="w-full">
-            <UserPreviewSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+            <UserPreviewSidebar 
+              activeTab={activeTab} 
+              setActiveTab={setActiveTab} 
+              userName={profile.fullName || 'Lina Benyahia'}
+              userRole={profile.roles.length > 0 ? profile.roles.join(' · ') : 'Fashion Designer'}
+              userLocation={profile.wilaya || 'Alger'}
+            />
           </div>
 
           {/* Main content pane */}
@@ -545,8 +612,15 @@ export default function UserPreviewPage() {
           </main>
 
         </div>
-
       </div>
     </div>
+  );
+}
+
+export default function UserPreviewPage() {
+  return (
+    <ExploreProvider>
+      <UserPreviewPageContent />
+    </ExploreProvider>
   );
 }

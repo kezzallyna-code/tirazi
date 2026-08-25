@@ -3,163 +3,195 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { createClient } from '@/utils/supabase/client';
 import Logo from '@/components/Logo';
 
-function CheckoutContent() {
+export default function CheckoutPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const plan = searchParams.get('plan') || 'premium-basic';
+  const rawPlan = searchParams.get('plan');
+  
+  const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  const supabase = createClient();
 
-  // Form states
-  const [cardNumber, setCardNumber] = useState('');
-  const [expiry, setExpiry] = useState('');
-  const [cvc, setCvc] = useState('');
-  const [name, setName] = useState('');
+  let planName = '';
+  let price = '';
+  let features: string[] = [];
 
-  const planName = plan === 'premium-pro' ? 'Premium Pro' : 'Premium Basic';
-  const planPrice = plan === 'premium-pro' ? '4,500 DA' : '2,000 DA';
+  if (rawPlan === 'premium-basic' || rawPlan === 'basic') {
+    planName = 'Premium Basic';
+    price = '2,000 DA';
+    features = [
+      'Professional profile & multiple roles',
+      'Up to 30 portfolio images',
+      'Up to 10 portfolio videos',
+      'Advanced search filters',
+      'Enhanced profile visibility',
+      'Limited profile visitors',
+      'Basic analytics'
+    ];
+  } else if (rawPlan === 'premium-pro' || rawPlan === 'pro') {
+    planName = 'Premium Pro';
+    price = '4,500 DA';
+    features = [
+      'Professional profile & multiple roles',
+      'Unlimited portfolio images & videos',
+      'Priority search placement',
+      'Verified professional badge',
+      'Advanced analytics',
+      'Full profile visitor access',
+      'Priority customer support'
+    ];
+  }
 
-  const handlePayment = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsProcessing(true);
+  useEffect(() => {
+    async function checkAuth() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.push(`/login?redirect=/checkout?plan=${rawPlan}`);
+        return;
+      }
+      
+      if (!rawPlan || (rawPlan !== 'premium-basic' && rawPlan !== 'premium-pro' && rawPlan !== 'basic' && rawPlan !== 'pro')) {
+        router.push('/subscriptions');
+        return;
+      }
+      
+      setIsLoading(false);
+    }
     
-    // Simulate payment processing delay
-    setTimeout(() => {
-      router.push(`/checkout/success?session_id=mock_session_${Date.now()}&plan=${plan}`);
-    }, 2000);
+    checkAuth();
+  }, [rawPlan, router, supabase]);
+
+  const handleCheckout = async () => {
+    setIsProcessing(true);
+    setError(null);
+
+    try {
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ plan: rawPlan }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to initialize checkout');
+      }
+
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error('No checkout URL returned');
+      }
+    } catch (err: any) {
+      setError(err.message || 'An error occurred during checkout');
+      setIsProcessing(false);
+    }
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="stitch-screen-wrapper bg-background min-h-screen w-full pt-28 pb-20 px-margin-mobile md:px-margin-desktop relative flex flex-col items-center justify-center">
+    <div className="min-h-screen bg-background relative flex flex-col">
       <div className="absolute top-8 left-8">
         <Link href="/">
           <Logo className="h-10 w-auto object-contain" />
         </Link>
       </div>
 
-      <div className="max-w-4xl w-full flex flex-col lg:flex-row gap-8 z-10">
+      <div className="flex-1 max-w-4xl w-full mx-auto px-4 py-24 flex flex-col justify-center animate-in fade-in duration-500">
+        <h1 className="font-display-lg text-4xl text-primary font-serif text-center mb-10">Complete your order</h1>
         
-        {/* Left Side: Order Summary */}
-        <div className="flex-1 bg-surface-container-low p-8 rounded-3xl border border-outline-variant/30">
-          <h2 className="font-headline-sm text-2xl text-primary font-bold mb-6">Order Summary</h2>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center pb-4 border-b border-outline-variant/20">
-              <div>
-                <p className="font-label-md text-lg text-on-surface font-bold">TIRAZY {planName}</p>
-                <p className="text-sm text-on-surface-variant">Billed monthly</p>
-              </div>
-              <p className="font-title-lg text-xl text-primary font-bold">{planPrice}</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+          
+          {/* Order Summary */}
+          <div className="bg-white dark:bg-surface-container-low p-8 rounded-[28px] border border-outline-variant/20 shadow-sm">
+            <h2 className="font-title-lg text-xl text-primary mb-6 border-b border-outline-variant/20 pb-4">Order Summary</h2>
+            
+            <div className="mb-6">
+              <p className="text-sm text-on-surface-variant mb-1">Subscription Plan</p>
+              <h3 className="font-headline-sm text-2xl text-on-surface">{planName}</h3>
+              <p className="font-title-md text-lg text-primary mt-1">{price} / month</p>
             </div>
             
-            <div className="space-y-3 py-4">
-              <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-primary text-[20px]">check_circle</span>
-                <p className="text-sm text-on-surface-variant">Enhanced professional visibility</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-primary text-[20px]">check_circle</span>
-                <p className="text-sm text-on-surface-variant">Unlimited project uploads</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-primary text-[20px]">check_circle</span>
-                <p className="text-sm text-on-surface-variant">Direct messaging with artisans</p>
-              </div>
+            <div className="space-y-3 mb-8">
+              <p className="text-sm font-bold text-on-surface">Includes:</p>
+              <ul className="space-y-2">
+                {features.map((feature, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-on-surface-variant">
+                    <span className="material-symbols-outlined text-[18px] text-primary shrink-0">check_circle</span>
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
-
-            <div className="pt-4 border-t border-outline-variant/20 flex justify-between items-center">
-              <p className="font-label-md text-lg text-on-surface font-bold">Total due today</p>
-              <p className="font-title-lg text-2xl text-primary font-bold">{planPrice}</p>
+            
+            <div className="border-t border-outline-variant/20 pt-6 flex justify-between items-end">
+              <p className="font-bold text-on-surface text-lg">Total due today</p>
+              <p className="font-headline-sm text-2xl text-primary font-bold">{price}</p>
             </div>
           </div>
-        </div>
-
-        {/* Right Side: Payment Form */}
-        <div className="flex-[1.5] bg-white dark:bg-surface-container-lowest p-8 rounded-3xl border border-outline-variant/30 shadow-lg">
-          <h2 className="font-headline-sm text-2xl text-primary font-bold mb-6">Payment Details</h2>
-          <form onSubmit={handlePayment} className="space-y-6">
+          
+          {/* Payment Section */}
+          <div className="bg-white dark:bg-surface-container-low p-8 rounded-[28px] border border-outline-variant/20 shadow-sm flex flex-col h-full">
+            <h2 className="font-title-lg text-xl text-primary mb-6 border-b border-outline-variant/20 pb-4">Payment Method</h2>
             
-            <div className="space-y-2">
-              <label className="font-label-md text-sm text-on-surface-variant">Name on Card</label>
-              <input 
-                type="text" 
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary text-body-md" 
-                placeholder="Ahmed Benali"
-              />
+            <div className="flex-1 flex flex-col justify-center text-center p-6 border-2 border-dashed border-outline-variant/30 rounded-2xl mb-8 bg-surface/50">
+              <span className="material-symbols-outlined text-[48px] text-primary/40 mb-4">credit_card</span>
+              <p className="text-on-surface-variant text-sm mb-2">You will be securely redirected to our payment provider to complete your purchase.</p>
+              <p className="text-[11px] text-on-surface-variant/60 flex items-center justify-center gap-1">
+                <span className="material-symbols-outlined text-[14px]">lock</span>
+                Secured by Stripe
+              </p>
             </div>
-
-            <div className="space-y-2">
-              <label className="font-label-md text-sm text-on-surface-variant">Card Number</label>
-              <div className="relative">
-                <input 
-                  type="text" 
-                  required
-                  value={cardNumber}
-                  onChange={(e) => setCardNumber(e.target.value)}
-                  maxLength={19}
-                  className="w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-3 pl-12 focus:ring-2 focus:ring-primary focus:border-primary text-body-md font-mono" 
-                  placeholder="0000 0000 0000 0000"
-                />
-                <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant">
-                  credit_card
-                </span>
+            
+            {error && (
+              <div className="mb-6 p-4 bg-error/10 text-error rounded-xl text-sm flex items-center gap-2">
+                <span className="material-symbols-outlined">error</span>
+                {error}
               </div>
+            )}
+            
+            <div className="mt-auto space-y-4">
+              <button 
+                onClick={handleCheckout}
+                disabled={isProcessing}
+                className="w-full py-4 bg-primary text-on-primary hover:bg-primary-dark font-label-lg rounded-full shadow-md hover:shadow-lg transition-all active:scale-95 disabled:opacity-70 disabled:pointer-events-none flex justify-center items-center gap-2"
+              >
+                {isProcessing ? (
+                  <>
+                    <span className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></span>
+                    Processing...
+                  </>
+                ) : (
+                  <>Continue / Pay {price}</>
+                )}
+              </button>
+              
+              <Link 
+                href="/subscriptions"
+                className="block w-full py-4 text-center text-on-surface hover:bg-surface-container rounded-full font-label-md transition-colors"
+              >
+                Back to Plans
+              </Link>
             </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="font-label-md text-sm text-on-surface-variant">Expiration Date</label>
-                <input 
-                  type="text" 
-                  required
-                  value={expiry}
-                  onChange={(e) => setExpiry(e.target.value)}
-                  maxLength={5}
-                  className="w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary text-body-md font-mono" 
-                  placeholder="MM/YY"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="font-label-md text-sm text-on-surface-variant">CVC</label>
-                <input 
-                  type="text" 
-                  required
-                  value={cvc}
-                  onChange={(e) => setCvc(e.target.value)}
-                  maxLength={4}
-                  className="w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary text-body-md font-mono" 
-                  placeholder="123"
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isProcessing}
-              className="w-full bg-primary text-white font-label-md text-label-md py-4 mt-4 rounded-full shadow-lg shadow-primary/20 hover:bg-primary-dark hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isProcessing ? 'Processing Payment...' : `Pay ${planPrice}`}
-              {!isProcessing && <span className="material-symbols-outlined text-[18px]">lock</span>}
-            </button>
-            <p className="text-center text-[12px] text-on-surface-variant pt-2 flex items-center justify-center gap-1">
-              <span className="material-symbols-outlined text-[14px]">verified_user</span>
-              Payments are secure and encrypted
-            </p>
-          </form>
+          </div>
+          
         </div>
-
       </div>
     </div>
-  );
-}
-
-export default function CheckoutPage() {
-  return (
-    <React.Suspense fallback={<div>Loading checkout...</div>}>
-      <CheckoutContent />
-    </React.Suspense>
   );
 }

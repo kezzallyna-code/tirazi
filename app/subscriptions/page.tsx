@@ -5,19 +5,36 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { PricingCard } from '@/components/subscriptions/PricingCard';
 import { ComparisonTable } from '@/components/subscriptions/ComparisonTable';
+import { createClient } from '@/utils/supabase/client';
 
 export default function SubscriptionsPage() {
   const router = useRouter();
-  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [currentPlan, setCurrentPlan] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isProcessingFree, setIsProcessingFree] = useState(false);
+  const supabase = createClient();
 
-  // Read current plan from localStorage on mount
   useEffect(() => {
-    const saved = localStorage.getItem('tirazy_selected_plan');
-    if (saved) {
-      setSelectedPlan(saved);
+    async function loadCurrentPlan() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('subscription_plan')
+          .eq('id', session.user.id)
+          .single();
+          
+        if (data && !error) {
+          setCurrentPlan(data.subscription_plan);
+        } else {
+          setCurrentPlan('free');
+        }
+      } else {
+        setCurrentPlan('guest');
+      }
     }
-  }, []);
+    loadCurrentPlan();
+  }, [supabase]);
 
   const triggerToast = (message: string) => {
     setToastMessage(message);
@@ -26,8 +43,51 @@ export default function SubscriptionsPage() {
     }, 3000);
   };
 
-  const handleSelectPlan = (planId: string, planName: string) => {
+  const handleSelectPlan = async (planId: string, planName: string) => {
+    if (planId === currentPlan || (planId === 'premium-basic' && currentPlan === 'basic') || (planId === 'premium-pro' && currentPlan === 'pro')) {
+      return; // Do nothing if it's already the current plan
+    }
+
+    if (planId === 'free') {
+      setIsProcessingFree(true);
+      try {
+        const res = await fetch('/api/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ plan: 'free' }),
+        });
+        const data = await res.json();
+        if (data.url) {
+          router.push(data.url);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsProcessingFree(false);
+      }
+      return;
+    }
+
     router.push(`/checkout?plan=${planId}`);
+  };
+
+  const getButtonText = (planId: string) => {
+    const isPro = currentPlan === 'pro' || currentPlan === 'premium-pro';
+    const isBasic = currentPlan === 'basic' || currentPlan === 'premium-basic';
+    
+    if (planId === 'free') {
+      return currentPlan === 'free' ? 'Current Plan' : (isProcessingFree ? 'Activating...' : 'Activate Free Plan');
+    }
+    if (planId === 'premium-basic') {
+      if (isBasic) return 'Current Plan';
+      if (isPro) return 'Downgrade';
+      return 'Continue to Payment';
+    }
+    if (planId === 'premium-pro') {
+      if (isPro) return 'Current Plan';
+      return 'Continue to Payment';
+    }
+    return 'Select Plan';
   };
 
   return (
@@ -52,10 +112,10 @@ export default function SubscriptionsPage() {
             <span className="material-symbols-outlined text-[18px]">arrow_back</span>
             Back to Entry
           </Link>
-          {selectedPlan && (
+          {currentPlan && currentPlan !== 'guest' && (
             <div className="flex items-center gap-1.5 px-3 py-1 bg-primary/10 rounded-full text-primary font-bold text-[12px]">
               <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
-              Current Preview Plan: {selectedPlan === 'free' ? 'Free' : selectedPlan === 'basic' ? 'Premium Basic' : 'Premium Pro'}
+              Current Plan: {currentPlan === 'free' ? 'Free' : (currentPlan === 'basic' || currentPlan === 'premium-basic') ? 'Premium Basic' : 'Premium Pro'}
             </div>
           )}
         </div>
@@ -92,7 +152,7 @@ export default function SubscriptionsPage() {
               'Standard Search Visibility',
               'Very Basic Profile Analytics',
             ]}
-            buttonText="Start for Free"
+            buttonText={getButtonText('free')}
             isPopular={false}
             onSelect={() => handleSelectPlan('free', 'Free')}
           />
@@ -111,7 +171,7 @@ export default function SubscriptionsPage() {
               'Limited Profile Visitor Insights',
               'Basic Profile Analytics',
             ]}
-            buttonText="Choose Basic"
+            buttonText={getButtonText('premium-basic')}
             isPopular={false}
             onSelect={() => handleSelectPlan('premium-basic', 'Premium Basic')}
           />
@@ -132,7 +192,7 @@ export default function SubscriptionsPage() {
               'Priority Customer Support',
               'Early Access to New Features',
             ]}
-            buttonText="Choose Pro"
+            buttonText={getButtonText('premium-pro')}
             isPopular={true}
             onSelect={() => handleSelectPlan('premium-pro', 'Premium Pro')}
           />

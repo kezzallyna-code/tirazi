@@ -24,13 +24,7 @@ interface UserOverviewProps {
   showToast: (msg: string) => void;
 }
 
-const userActivities = [
-  { text: "Nadia Cherif viewed your profile.", time: "2 hours ago", icon: "visibility", color: "text-primary bg-primary/10" },
-  { text: "Your project “Golden Karakou Collection” received 14 new views.", time: "1 day ago", icon: "bar_chart", color: "text-secondary bg-secondary/10" },
-  { text: "Omar Mansour started following you.", time: "2 days ago", icon: "person_add", color: "text-tertiary bg-tertiary/10" },
-  { text: "Your post received 8 new appreciations.", time: "3 days ago", icon: "thumb_up", color: "text-primary bg-primary/10" },
-  { text: "You saved a project from Lina Benyahia.", time: "4 days ago", icon: "bookmark", color: "text-secondary bg-secondary/10" }
-];
+const userActivities: Array<{ text: string; time: string; icon: string; color: string }> = [];
 
 export function UserOverview({
   userData,
@@ -40,7 +34,7 @@ export function UserOverview({
   showToast,
 }: UserOverviewProps) {
   // Extract user first name
-  const firstName = userData.fullName.split(' ')[0] || 'Artisan';
+  const firstName = userData.fullName.split(' ')[0] || 'Lina';
 
   return (
     <div className="space-y-10 animate-in fade-in duration-300">
@@ -109,8 +103,8 @@ export function UserOverview({
         <div className="bg-white dark:bg-surface-container-low p-6 rounded-[24px] border border-outline-variant/10 shadow-sm">
           <p className="font-label-sm text-[12px] text-on-surface-variant uppercase tracking-wider mb-2">Profile Views</p>
           <div className="flex items-baseline justify-between">
-            <span className="font-headline-sm text-primary font-bold">1,248</span>
-            <span className="text-[11px] text-primary bg-primary/10 px-2 py-0.5 rounded-full font-bold">+12%</span>
+            <span className="font-headline-sm text-primary font-bold">0</span>
+            <span className="text-[11px] text-on-surface-variant/40">this week</span>
           </div>
         </div>
         <div className="bg-white dark:bg-surface-container-low p-6 rounded-[24px] border border-outline-variant/10 shadow-sm">
@@ -123,15 +117,15 @@ export function UserOverview({
         <div className="bg-white dark:bg-surface-container-low p-6 rounded-[24px] border border-outline-variant/10 shadow-sm">
           <p className="font-label-sm text-[12px] text-on-surface-variant uppercase tracking-wider mb-2">Post Appreciations</p>
           <div className="flex items-baseline justify-between">
-            <span className="font-headline-sm text-primary font-bold">94</span>
-            <span className="text-[11px] text-primary bg-primary/10 px-2 py-0.5 rounded-full font-bold">+8%</span>
+            <span className="font-headline-sm text-primary font-bold">0</span>
+            <span className="text-[11px] text-on-surface-variant/40">this week</span>
           </div>
         </div>
         <div className="bg-white dark:bg-surface-container-low p-6 rounded-[24px] border border-outline-variant/10 shadow-sm">
           <p className="font-label-sm text-[12px] text-on-surface-variant uppercase tracking-wider mb-2">New Followers</p>
           <div className="flex items-baseline justify-between">
-            <span className="font-headline-sm text-primary font-bold">12</span>
-            <span className="text-[11px] text-primary bg-primary/10 px-2 py-0.5 rounded-full font-bold">+15%</span>
+            <span className="font-headline-sm text-primary font-bold">0</span>
+            <span className="text-[11px] text-on-surface-variant/40">this week</span>
           </div>
         </div>
       </div>
@@ -201,17 +195,23 @@ export function UserOverview({
             <p className="text-[12px] text-on-surface-variant/75 mt-0.5">Community engagement alerts.</p>
           </div>
           <div className="space-y-5 bg-white dark:bg-surface-container-low p-6 rounded-[24px] border border-outline-variant/10 shadow-sm">
-            {userActivities.map((act, index) => (
-              <div key={index} className="flex gap-3">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${act.color}`}>
-                  <span className="material-symbols-outlined text-[18px]">{act.icon}</span>
+            {userActivities.length > 0 ? (
+              userActivities.map((act, index) => (
+                <div key={index} className="flex gap-3">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${act.color}`}>
+                    <span className="material-symbols-outlined text-[18px]">{act.icon}</span>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[12px] text-on-surface leading-normal">{act.text}</p>
+                    <span className="text-[10px] text-on-surface-variant/40 mt-0.5 block">{act.time}</span>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <p className="text-[12px] text-on-surface leading-normal">{act.text}</p>
-                  <span className="text-[10px] text-on-surface-variant/40 mt-0.5 block">{act.time}</span>
-                </div>
+              ))
+            ) : (
+              <div className="py-6 text-center text-on-surface-variant/50">
+                <p className="text-sm">No recent activity to show.</p>
               </div>
-            ))}
+            )}
           </div>
         </div>
 

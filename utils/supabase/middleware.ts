@@ -34,11 +34,12 @@ export async function updateSession(request: NextRequest) {
 
   const url = request.nextUrl.clone()
   const isAuthRoute = url.pathname.startsWith('/login') || url.pathname.startsWith('/register') || url.pathname.startsWith('/join')
-  const isPublicRoute = url.pathname === '/' || url.pathname.startsWith('/explore') || url.pathname.startsWith('/showcase') || isAuthRoute || url.pathname.startsWith('/auth') || url.pathname.startsWith('/projects') || url.pathname.startsWith('/artisans')
+  const isPublicRoute = url.pathname === '/' || url.pathname.startsWith('/explore') || url.pathname.startsWith('/showcase') || isAuthRoute || url.pathname.startsWith('/auth') || url.pathname.startsWith('/projects') || url.pathname.startsWith('/artisans') || url.pathname.startsWith('/subscriptions')
   const isProtectedRoute = !isPublicRoute
 
   if (isProtectedRoute && !user) {
     url.pathname = '/login'
+    url.searchParams.set('redirect', request.nextUrl.pathname)
     return NextResponse.redirect(url)
   }
 

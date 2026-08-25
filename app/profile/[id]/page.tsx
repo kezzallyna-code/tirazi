@@ -5,7 +5,8 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 
-export default async function ProfilePage({ params }: { params: { id: string } }) {
+export default async function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const cookieStore = cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -31,7 +32,7 @@ export default async function ProfilePage({ params }: { params: { id: string } }
       experience_level,
       profile_roles ( roles ( name ) )
     `)
-    .eq('id', params.id)
+    .eq('id', id)
     .single();
 
   if (!profile) {
@@ -47,14 +48,14 @@ export default async function ProfilePage({ params }: { params: { id: string } }
       description,
       project_media ( media_url )
     `)
-    .eq('author_id', params.id)
+    .eq('author_id', id)
     .order('created_at', { ascending: false });
 
-  const fullName = profile.full_name || 'Artisan';
+  const fullName = profile.full_name || 'Lina Benyahia';
   const avatarUrl = profile.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=256';
-  const roles = profile.profile_roles?.map((pr: any) => pr.roles.name).join(' & ') || 'Textile Professional';
-  const bio = profile.bio || 'Professional in the textile ecosystem.';
-  const wilaya = profile.wilaya || 'Algeria';
+  const roles = profile.profile_roles?.map((pr: any) => pr.roles.name).join(' & ') || 'Fashion Designer';
+  const bio = profile.bio || 'I create contemporary Algerian fashion inspired by traditional craftsmanship and modern silhouettes.';
+  const wilaya = profile.wilaya || 'Alger';
 
   return (
     <div className="stitch-screen-wrapper">

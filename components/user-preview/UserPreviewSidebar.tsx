@@ -10,9 +10,18 @@ interface SidebarItem {
 interface UserPreviewSidebarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
+  userName?: string;
+  userRole?: string;
+  userLocation?: string;
 }
 
-export function UserPreviewSidebar({ activeTab, setActiveTab }: UserPreviewSidebarProps) {
+export function UserPreviewSidebar({ 
+  activeTab, 
+  setActiveTab, 
+  userName = 'Lina Benyahia', 
+  userRole = 'Fashion Designer', 
+  userLocation = 'Alger' 
+}: UserPreviewSidebarProps) {
   const sidebarItems: SidebarItem[] = [
     { id: 'overview', name: 'Overview', icon: 'dashboard' },
     { id: 'profile', name: 'My Profile', icon: 'person' },
@@ -29,8 +38,8 @@ export function UserPreviewSidebar({ activeTab, setActiveTab }: UserPreviewSideb
       {/* Desktop Sidebar Layout */}
       <aside className="hidden md:flex flex-col gap-2 p-6 bg-white dark:bg-surface-container-low rounded-[24px] border border-outline-variant/20 shadow-sm sticky top-28 w-full">
         <div className="mb-6 px-4">
-          <h3 className="font-title-lg text-title-lg text-primary font-serif font-bold">Lina Benyahia</h3>
-          <p className="text-[12px] text-on-surface-variant font-medium mt-1">Fashion Designer &middot; Alger</p>
+          <h3 className="font-title-lg text-title-lg text-primary font-serif font-bold">{userName}</h3>
+          <p className="text-[12px] text-on-surface-variant font-medium mt-1">{userRole} &middot; {userLocation}</p>
         </div>
         <nav className="flex flex-col gap-1 w-full mb-4">
           {sidebarItems.map((item) => {

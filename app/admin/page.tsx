@@ -21,6 +21,48 @@ export default function AdminPreviewPage() {
     }, 2500);
   };
 
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [adminName, setAdminName] = useState<string>('');
+
+  React.useEffect(() => {
+    const checkAdmin = async () => {
+      const { createClient } = await import('@/utils/supabase/client');
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user) {
+        setIsAuthenticated(false);
+        setIsLoading(false);
+        return;
+      }
+      
+      const { data } = await supabase
+        .from('profiles')
+        .select(`
+          full_name,
+          profile_roles!inner (
+            roles!inner ( name )
+          )
+        `)
+        .eq('id', session.user.id)
+        .single();
+        
+      const hasAdminRole = data?.profile_roles?.some(
+        (pr: any) => pr.roles?.name.toLowerCase() === 'admin'
+      );
+
+      if (hasAdminRole) {
+        setIsAuthenticated(true);
+        setAdminName(data?.full_name || 'Admin');
+      } else {
+        setIsAuthenticated(false);
+      }
+      setIsLoading(false);
+    };
+    checkAdmin();
+  }, []);
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'overview':
@@ -41,6 +83,38 @@ export default function AdminPreviewPage() {
         return null;
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="bg-background min-h-screen w-full flex items-center justify-center">
+        <span className="material-symbols-outlined text-primary text-[36px] animate-spin">
+          progress_activity
+        </span>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="bg-background min-h-screen w-full flex flex-col items-center justify-center px-4">
+        <div className="bg-white dark:bg-surface-container-low p-8 rounded-[24px] border border-outline-variant/30 shadow-sm max-w-md w-full text-center space-y-6">
+          <div className="w-16 h-16 rounded-full bg-error/10 flex items-center justify-center mx-auto mb-2 text-error">
+            <span className="material-symbols-outlined text-[32px]">security</span>
+          </div>
+          <div>
+            <h2 className="font-title-lg text-title-lg text-on-surface font-bold">Access Denied</h2>
+            <p className="text-on-surface-variant text-sm mt-2">You do not have the required administrator privileges to access this console.</p>
+          </div>
+          <a
+            href="/"
+            className="w-full inline-block bg-primary text-white font-label-md px-4 py-3 rounded-xl shadow-md hover:shadow-lg active:scale-95 transition-all"
+          >
+            Return to Home
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-background min-h-screen w-full pt-24 pb-16 px-margin-mobile md:px-margin-desktop">

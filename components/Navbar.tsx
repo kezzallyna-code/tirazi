@@ -97,9 +97,26 @@ export function Navbar() {
     window.location.href = '/login';
   };
 
-  const displayName = profile?.full_name || 'Artisan';
-  const displayRole = profile?.profile_roles?.[0]?.roles?.name || 'Textile Professional';
+  const displayName = profile?.full_name || 'Lina Benyahia';
+  const displayRole = profile?.profile_roles?.[0]?.roles?.name || 'Fashion Designer';
   const displayAvatar = profile?.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=256';
+
+  if (pathname?.startsWith('/admin')) {
+    return (
+      <nav className="fixed top-0 left-0 w-full z-50 bg-surface/90 dark:bg-surface-dim/90 backdrop-blur-md shadow-sm border-b border-outline-variant/20">
+        <div className="flex justify-between items-center px-4 md:px-12 py-3 max-w-container-max mx-auto">
+          <Link href="/admin" className="focus:outline-none focus:ring-2 focus:ring-primary rounded-lg flex items-center gap-3">
+            <Logo className="h-10 w-auto object-contain" />
+            <span className="font-bold text-primary font-serif hidden md:block">Admin Console</span>
+          </Link>
+          <Link href="/" className="text-sm font-bold text-on-surface-variant hover:text-primary flex items-center gap-2">
+            <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+            Return to Site
+          </Link>
+        </div>
+      </nav>
+    );
+  }
 
   return (
     <nav className="fixed top-0 left-0 w-full z-50 bg-surface/90 dark:bg-surface-dim/90 backdrop-blur-md shadow-sm border-b border-outline-variant/20">

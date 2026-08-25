@@ -59,9 +59,11 @@ export default function LoginPage() {
     // Display welcome toast
     setToastMessage(`Welcome back, ${greetingName}.`);
 
-    // Redirect to user workspace after 1.5 seconds
+    // Redirect to user workspace or original page after 1.5 seconds
     setTimeout(() => {
-      router.push('/user');
+      const redirectParams = new URLSearchParams(window.location.search);
+      const redirectUrl = redirectParams.get('redirect');
+      router.push(redirectUrl || '/user');
     }, 1500);
   };
 

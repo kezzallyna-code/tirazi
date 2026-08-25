@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { createClient } from '@/utils/supabase/client';
 
 export default function SettingsPage() {
   // Active Tab state
@@ -24,10 +25,74 @@ export default function SettingsPage() {
   const [aboutMe, setAboutMe] = useState(
     'I create contemporary Algerian fashion inspired by traditional craftsmanship and modern silhouettes.'
   );
+  const [avatarUrl, setAvatarUrl] = useState('https://lh3.googleusercontent.com/aida-public/AB6AXuANf5msGfpBwraVf80zGPy0n3JBSPQp6MJnVF9YgMG58-etwGk_a54lmk8QfX1EXbv_uilQ--5g1qGqkj96Jq1s1HxQHwrKM6G_8JXsDi61ArduC2YHPX5ze6HdbARr2B9o5apGNiSMVlfuqennc3iCRJIveZmPd62P4gyjNBOTihnjFjw_D11zWSkiNWJOe3Z6RVlGJURqPC2HDH2q0aCLd_2puyyNjN6gV3ToAS27HUt0Pgw4OeZJWV2jaKEJ_mkq1zOIZGRgRo4');
 
-  const handleSaveProfile = (e: React.FormEvent) => {
+  useEffect(() => {
+    const fetchData = async () => {
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.user) {
+        setEmailAddress(session.user.email || '');
+
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select(`
+            full_name,
+            bio,
+            wilaya,
+            avatar_url,
+            profile_roles (
+              roles ( name )
+            )
+          `)
+          .eq('id', session.user.id)
+          .single();
+
+        if (profileData) {
+          if (profileData.full_name) setFullName(profileData.full_name);
+          if (profileData.bio) setAboutMe(profileData.bio);
+          if (profileData.wilaya) setLocation(profileData.wilaya);
+          if (profileData.avatar_url) setAvatarUrl(profileData.avatar_url);
+          
+          const roles = profileData.profile_roles?.map((pr: any) => pr.roles?.name);
+          if (roles && roles.length > 0) {
+            setSpecialization(roles.join(' · '));
+          }
+        }
+      }
+    };
+    fetchData();
+  }, []);
+
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    showToast("Profile changes saved.");
+    setIsSaving(true);
+    
+    const supabase = createClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (session?.user) {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: fullName,
+          bio: aboutMe,
+          wilaya: location,
+        })
+        .eq('id', session.user.id);
+        
+      if (error) {
+        console.error('Error updating profile:', error);
+        showToast("Error saving profile.");
+      } else {
+        showToast("Profile changes saved.");
+      }
+    }
+    
+    setIsSaving(false);
   };
 
   // Notification states
@@ -80,7 +145,7 @@ export default function SettingsPage() {
           <div className="bg-white dark:bg-surface-container-low p-6 rounded-[24px] border border-outline-variant/20 shadow-sm flex flex-col items-center text-center">
             <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-outline-variant/30 shadow-sm mb-4">
               <img 
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuANf5msGfpBwraVf80zGPy0n3JBSPQp6MJnVF9YgMG58-etwGk_a54lmk8QfX1EXbv_uilQ--5g1qGqkj96Jq1s1HxQHwrKM6G_8JXsDi61ArduC2YHPX5ze6HdbARr2B9o5apGNiSMVlfuqennc3iCRJIveZmPd62P4gyjNBOTihnjFjw_D11zWSkiNWJOe3Z6RVlGJURqPC2HDH2q0aCLd_2puyyNjN6gV3ToAS27HUt0Pgw4OeZJWV2jaKEJ_mkq1zOIZGRgRo4" 
+                src={avatarUrl} 
                 alt={fullName} 
                 className="w-full h-full object-cover" 
               />
@@ -253,9 +318,11 @@ export default function SettingsPage() {
                 <div className="mt-8 flex justify-end">
                   <button
                     type="submit"
-                    className="bg-primary text-white font-label-md text-label-md px-8 py-3 rounded-full hover:shadow-lg active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                    disabled={isSaving}
+                    className="bg-primary text-white font-label-md text-label-md px-8 py-3 rounded-full hover:shadow-lg active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
                   >
-                    Save Changes
+                    {isSaving && <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>}
+                    {isSaving ? 'Saving...' : 'Save Changes'}
                   </button>
                 </div>
               </form>

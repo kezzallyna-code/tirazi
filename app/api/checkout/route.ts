@@ -1,21 +1,11 @@
 import { NextResponse } from 'next/server';
-import Stripe from 'stripe';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import Stripe from 'stripe';
 
-// Require environment variable
-const stripeKey = process.env.STRIPE_SECRET_KEY || 'dummy_test_key_that_fails_gracefully';
-const stripe = new Stripe(stripeKey, {
-  apiVersion: '2026-07-29.dahlia' as any,
-});
-
-export async function POST(request: Request) {
+export async function POST(req: Request) {
   try {
-    const { plan } = await request.json();
-
-    if (!plan) {
-      return NextResponse.json({ error: 'Plan is required' }, { status: 400 });
-    }
+    const { plan } = await req.json();
 
     const cookieStore = cookies();
     const supabase = createServerClient(
@@ -26,57 +16,92 @@ export async function POST(request: Request) {
           async get(name: string) {
             return (await cookieStore).get(name)?.value;
           },
+          async set(name: string, value: string, options: any) {
+            try {
+              (await cookieStore).set({ name, value, ...options });
+            } catch (error) {}
+          },
+          async remove(name: string, options: any) {
+            try {
+              (await cookieStore).set({ name, value: '', ...options });
+            } catch (error) {}
+          },
         },
       }
     );
 
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    // Set up plan details
-    let unitAmount = 0;
-    let productName = '';
-    
-    if (plan === 'premium-basic') {
-      unitAmount = 200000; // 2000 DA = 200000 centimes (assuming Stripe uses cents)
-      productName = 'Premium Basic';
-    } else if (plan === 'premium-pro') {
-      unitAmount = 450000; // 4500 DA = 450000 centimes
-      productName = 'Premium Pro';
-    } else {
-      return NextResponse.json({ error: 'Invalid plan' }, { status: 400 });
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Determine the base URL for the success/cancel redirects
-    const origin = request.headers.get('origin') || 'http://localhost:3000';
+    if (plan === 'free') {
+      // Free plan just updates DB directly
+      const { error } = await supabase
+        .from('profiles')
+        .update({ subscription_plan: 'free', subscription_status: 'active' })
+        .eq('id', user.id);
+        
+      if (error) throw error;
+      
+      return NextResponse.json({ url: '/dashboard' });
+    }
 
-    // Create Checkout Session
-    const checkoutSession = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      mode: 'payment',
-      line_items: [
-        {
-          price_data: {
-            currency: 'dzd', // Algerian Dinar
-            product_data: {
-              name: `Tirazy ${productName} Plan`,
-            },
-            unit_amount: unitAmount,
+    // Determine pricing based on plan
+    let priceId = '';
+    let unitAmount = 0;
+    
+    if (plan === 'premium-basic' || plan === 'basic') {
+      priceId = process.env.STRIPE_PRICE_BASIC || 'price_basic_mock';
+      unitAmount = 2000;
+    } else if (plan === 'premium-pro' || plan === 'pro') {
+      priceId = process.env.STRIPE_PRICE_PRO || 'price_pro_mock';
+      unitAmount = 4500;
+    } else {
+      return NextResponse.json({ error: 'Invalid plan selected' }, { status: 400 });
+    }
+
+    const origin = req.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+
+    if (process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY !== 'dummy_test_key_that_fails_gracefully') {
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+        apiVersion: '2025-01-27.acacia' as any,
+      });
+
+      // Create actual Stripe Checkout Session
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [
+          {
+            price: priceId,
+            quantity: 1,
           },
-          quantity: 1,
-        },
-      ],
-      success_url: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}&plan=${plan}`,
-      cancel_url: `${origin}/join`,
-      metadata: {
-        plan: plan,
-        user_id: session?.user?.id || 'guest',
-      },
-    });
+        ],
+        mode: 'subscription',
+        success_url: `${origin}/subscriptions/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin}/subscriptions/cancel`,
+        client_reference_id: user.id,
+        customer_email: user.email,
+        metadata: {
+          userId: user.id,
+          plan: plan,
+        }
+      });
 
-    return NextResponse.json({ url: checkoutSession.url });
+      return NextResponse.json({ url: session.url });
+    } else {
+      // DEVELOPMENT MODE: Return a URL to our mock dev checkout page
+      const devUrl = new URL(`${origin}/checkout/dev-mode`);
+      devUrl.searchParams.set('plan', plan);
+      devUrl.searchParams.set('amount', unitAmount.toString());
+      devUrl.searchParams.set('userId', user.id);
+      
+      return NextResponse.json({ url: devUrl.pathname + devUrl.search });
+    }
 
   } catch (error: any) {
-    console.error('Error creating Stripe checkout session:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('Checkout error:', error);
+    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
   }
 }
