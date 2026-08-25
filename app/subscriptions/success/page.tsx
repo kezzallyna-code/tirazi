@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Logo from '@/components/Logo';
 import { createClient } from '@/utils/supabase/client';
 
-export default function SubscriptionSuccessPage() {
+function SubscriptionSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('session_id');
@@ -120,5 +120,13 @@ export default function SubscriptionSuccessPage() {
         
       </div>
     </div>
+  );
+}
+
+export default function SubscriptionSuccessPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-surface-container flex items-center justify-center">Loading...</div>}>
+      <SubscriptionSuccessContent />
+    </Suspense>
   );
 }

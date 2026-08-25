@@ -43,6 +43,7 @@ function UserPreviewPageContent() {
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [savedProjects, setSavedProjects] = useState<Project[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   // Selected subscription plan
   const [selectedPlan, setSelectedPlan] = useState<string>('free');
@@ -54,6 +55,7 @@ function UserPreviewPageContent() {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session?.user) {
+        setCurrentUserId(session.user.id);
         // Fetch Profile
         const { data: profileData } = await supabase
           .from('profiles')
@@ -138,7 +140,7 @@ function UserPreviewPageContent() {
               image: p.project_media?.[0]?.media_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=256'
             };
           }).filter(Boolean);
-          setSavedProjects(formattedSavedProjects);
+          setSavedProjects(formattedSavedProjects as any);
         }
       }
     };
@@ -320,7 +322,7 @@ function UserPreviewPageContent() {
         );
 
       case 'posts': {
-        const myPosts = currentUser ? posts.filter((post) => post.artisan.id === currentUser.id) : [];
+        const myPosts = currentUserId ? posts.filter((post) => post.artisan.id === currentUserId) : [];
         return (
           <div className="bg-white dark:bg-surface-container-low p-8 rounded-[24px] border border-outline-variant/10 shadow-sm space-y-6 animate-in fade-in duration-300">
             <div>

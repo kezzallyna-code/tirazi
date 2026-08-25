@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Logo from '@/components/Logo';
 import { createClient } from '@/utils/supabase/client';
 
-export default function DevModeCheckoutPage() {
+function DevModeCheckoutContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const plan = searchParams.get('plan');
@@ -126,5 +126,13 @@ export default function DevModeCheckoutPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function DevModeCheckoutPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-surface-container-high flex items-center justify-center p-4">Loading...</div>}>
+      <DevModeCheckoutContent />
+    </Suspense>
   );
 }
