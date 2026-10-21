@@ -8,8 +8,8 @@ import { PostCard } from '@/components/explore/PostCard';
 export default function SavedPostsPage() {
   const { posts, savedPostIds, isInitialized } = useExplore();
 
-  // Filter posts that are in the savedPostIds array
-  const savedPostsList = posts.filter((post) => savedPostIds.includes(post.id));
+  // Filter posts like: savedPosts = posts.filter((post) => savedPostIds.includes(post.id))
+  const savedPosts = posts.filter((post) => savedPostIds.includes(post.id));
 
   if (!isInitialized) {
     return (
@@ -31,9 +31,9 @@ export default function SavedPostsPage() {
       </div>
 
       {/* Feed list */}
-      {savedPostsList.length > 0 ? (
+      {savedPosts.length > 0 ? (
         <div className="space-y-6">
-          {savedPostsList.map((post) => (
+          {savedPosts.map((post) => (
             <PostCard key={post.id} post={post} />
           ))}
         </div>
@@ -50,7 +50,7 @@ export default function SavedPostsPage() {
             href="/explore"
             className="px-6 py-3 bg-primary text-on-primary rounded-full font-label-md shadow-sm hover:shadow-md hover:bg-primary-dark transition-all inline-block active:scale-95"
           >
-            Explore Community
+            Explore Community →
           </Link>
         </div>
       )}

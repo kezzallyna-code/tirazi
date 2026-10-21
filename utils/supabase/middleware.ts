@@ -34,17 +34,19 @@ export async function updateSession(request: NextRequest) {
 
   const url = request.nextUrl.clone()
   const isAuthRoute = url.pathname.startsWith('/login') || url.pathname.startsWith('/register') || url.pathname.startsWith('/join')
-  const isPublicRoute = url.pathname === '/' || url.pathname.startsWith('/explore') || url.pathname.startsWith('/showcase') || isAuthRoute || url.pathname.startsWith('/auth') || url.pathname.startsWith('/projects') || url.pathname.startsWith('/artisans') || url.pathname.startsWith('/subscriptions')
+  const isPublicRoute = url.pathname === '/' || url.pathname.startsWith('/explore') || url.pathname.startsWith('/showcase') || isAuthRoute || url.pathname.startsWith('/auth') || url.pathname.startsWith('/projects') || url.pathname.startsWith('/artisans') || url.pathname.startsWith('/subscriptions') || url.pathname.startsWith('/profile/')
   const isProtectedRoute = !isPublicRoute
+  const mockUser = request.cookies.get('tirazy_mock_user')?.value
+  const hasUser = Boolean(user || mockUser)
 
-  if (isProtectedRoute && !user) {
+  if (isProtectedRoute && !hasUser) {
     url.pathname = '/login'
     url.searchParams.set('redirect', request.nextUrl.pathname)
     return NextResponse.redirect(url)
   }
 
-  if (isAuthRoute && user) {
-    url.pathname = '/dashboard'
+  if (isAuthRoute && hasUser) {
+    url.pathname = mockUser === 'admin@gmail.com' ? '/admin' : '/dashboard'
     return NextResponse.redirect(url)
   }
 

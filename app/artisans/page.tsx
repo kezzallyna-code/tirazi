@@ -1,6 +1,7 @@
 import React from 'react';
 import Logo from '@/components/Logo';
 import Link from 'next/link';
+import AvailabilityIndicator from '@/components/ui/AvailabilityIndicator';
 
 export default function ArtisansPage() {
   return (
@@ -72,8 +73,6 @@ export default function ArtisansPage() {
 
           <div className="col-span-12 md:col-span-9 space-y-12">
 
-
-
             <section>
               <div className="flex justify-between items-end mb-8">
                 <div>
@@ -84,21 +83,27 @@ export default function ArtisansPage() {
               </div>
               <div className="grid grid-cols-4 gap-6">
 
-                <div className="col-span-2 row-span-2 group cursor-pointer">
+                <Link href="/profile" className="col-span-2 row-span-2 group cursor-pointer block">
                   <div className="relative aspect-[4/5] rounded-[24px] overflow-hidden mb-4 shadow-sm group-hover:shadow-xl transition-all duration-500">
                     <img alt="Artisan Profile 1" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="A portrait of a young female Algerian fashion designer working on a mannequin. She is pinning a complex, avant-garde silk garment inspired by traditional Karakou patterns. The studio is minimalist with warm wooden furniture and gold accents. The lighting is soft and cinematic, highlighting the fine texture of the fabric." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmMy--UqOG_IukdsAsOLms-xcEEu0yWOI4s-Kkdvyt_4OzsL25pByPZ_UpEPIwMB36ah8J_JIGj3K0ZYvKIXJCsfw_Hj0h1bJMmaT4NGwbDbKJ2hAuCkXb6MkEvnpISD9U0enlzneNqS34Hk4kqwdz606v7oiRiyK2OqrEB2mIysK0NHaB5WOW5AjgeQN5_wO-WBQ7_kaezYHONVa8opkfIMJK4osuVZALt8EhWgVdVDf2OZA8WfDx2uhAPsoj6wIiDz2zq6vqGSc" />
                     <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full flex items-center gap-2">
                       <span className="material-symbols-outlined text-secondary text-[18px]">verified</span>
                       <span className="font-label-md text-[12px] text-primary">VERIFIED</span>
                     </div>
+                    <div className="absolute bottom-4 right-4">
+                      <AvailabilityIndicator status="available" size="md" showLabel className="bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm" />
+                    </div>
                   </div>
                   <h4 className="font-title-lg text-title-lg text-primary">Lina Benyahia</h4>
                   <p className="text-on-surface-variant font-body-md">Contemporary Karakou Designer • Algiers</p>
-                </div>
+                </Link>
 
                 <div className="col-span-2 group cursor-pointer flex gap-6 items-center bg-white p-6 rounded-[24px] shadow-sm hover:shadow-md transition-all">
-                  <div className="w-32 h-32 rounded-full overflow-hidden shrink-0">
-                    <img alt="Artisan Profile 2" className="w-full h-full object-cover" data-alt="A close-up portrait of a male textile artisan from Constantine, specializing in gold thread embroidery. He is shown with a focused gaze and skilled hands. The background is softly blurred showing high-end velvet fabrics and traditional Algerian motifs. The color palette is rich and warm, evoking professional excellence." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA5ALaJrWV5HmMqss1jKPAY4m06drxmy6KJKXd7fS4QANx4UKFEZlsX8jgeJeSTy_CT8niXUpEH5mTdUfCp7-vLpqbCHaQ28Gj5jA4QoVSOW4N7EOMy88GJmV8Spm4FHDeKhr7B-BQUGjeShgCrM8b1INRcUl9shbGC8sHTcvgfKJuQ-cg0XMgNrDQe63OuKTdKi20Wiz01JlVp8zt2v7-FsYobfN2il5cKIjLNPgUM31YaEosB0DTmJGyxlJwwqg5SaH6tYnCywLA" />
+                  <div className="relative shrink-0">
+                    <div className="w-32 h-32 rounded-full overflow-hidden">
+                      <img alt="Artisan Profile 2" className="w-full h-full object-cover" data-alt="A close-up portrait of a male textile artisan from Constantine, specializing in gold thread embroidery. He is shown with a focused gaze and skilled hands. The background is softly blurred showing high-end velvet fabrics and traditional Algerian motifs. The color palette is rich and warm, evoking professional excellence." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA5ALaJrWV5HmMqss1jKPAY4m06drxmy6KJKXd7fS4QANx4UKFEZlsX8jgeJeSTy_CT8niXUpEH5mTdUfCp7-vLpqbCHaQ28Gj5jA4QoVSOW4N7EOMy88GJmV8Spm4FHDeKhr7B-BQUGjeShgCrM8b1INRcUl9shbGC8sHTcvgfKJuQ-cg0XMgNrDQe63OuKTdKi20Wiz01JlVp8zt2v7-FsYobfN2il5cKIjLNPgUM31YaEosB0DTmJGyxlJwwqg5SaH6tYnCywLA" />
+                    </div>
+                    <AvailabilityIndicator status="busy" size="md" className="absolute bottom-1 right-1" />
                   </div>
                   <div>
                     <h4 className="font-title-lg text-title-lg text-primary">Omar Mansour</h4>
@@ -108,8 +113,11 @@ export default function ArtisansPage() {
                 </div>
 
                 <div className="col-span-2 group cursor-pointer flex gap-6 items-center bg-white p-6 rounded-[24px] shadow-sm hover:shadow-md transition-all">
-                  <div className="w-32 h-32 rounded-full overflow-hidden shrink-0">
-                    <img alt="Artisan Profile 3" className="w-full h-full object-cover" data-alt="A portrait of a professional jewelry artisan in her studio in Tlemcen. She is holding a finely crafted silver filigree necklace. The lighting is crisp and detailed, focusing on the intricate metalwork. The setting is clean and modern with subtle references to Maghrebian architecture in the background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAr5IqOMA55j3BSII_aqfwQKJ2xTMJ0Y8SdxJrG3kRGjShjK67bUzEqPDfb5lCK1avDaI72c4BD_PK8PMuIZSRwjbPS1J4lUhgor8D5FvMWfrf3XKDXo613WV3ZQ5YfKmNXztcYwHsz_b-zrPFdHzs8ytA9up46loNZpe7lat_dfMocHCVWzWyEyYecmk2T--rtDc6ncFrSnsANU4RA50NrCRZJNb11Gfs-8-vXRRvTFUhKrc90hCVTEPDS3w5C4NPKAqvWbF2w3sw" />
+                  <div className="relative shrink-0">
+                    <div className="w-32 h-32 rounded-full overflow-hidden">
+                      <img alt="Artisan Profile 3" className="w-full h-full object-cover" data-alt="A portrait of a professional jewelry artisan in her studio in Tlemcen. She is holding a finely crafted silver filigree necklace. The lighting is crisp and detailed, focusing on the intricate metalwork. The setting is clean and modern with subtle references to Maghrebian architecture in the background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAr5IqOMA55j3BSII_aqfwQKJ2xTMJ0Y8SdxJrG3kRGjShjK67bUzEqPDfb5lCK1avDaI72c4BD_PK8PMuIZSRwjbPS1J4lUhgor8D5FvMWfrf3XKDXo613WV3ZQ5YfKmNXztcYwHsz_b-zrPFdHzs8ytA9up46loNZpe7lat_dfMocHCVWzWyEyYecmk2T--rtDc6ncFrSnsANU4RA50NrCRZJNb11Gfs-8-vXRRvTFUhKrc90hCVTEPDS3w5C4NPKAqvWbF2w3sw" />
+                    </div>
+                    <AvailabilityIndicator status="available" size="md" className="absolute bottom-1 right-1" />
                   </div>
                   <div>
                     <h4 className="font-title-lg text-title-lg text-primary">Sonia Kerroum</h4>
@@ -178,8 +186,11 @@ export default function ArtisansPage() {
 
                 <div className="group flex items-center justify-between p-4 rounded-2xl hover:bg-surface-container-low transition-all border-b border-transparent hover:border-primary/10">
                   <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-xl overflow-hidden shadow-sm">
-                      <img alt="Artisan 1" data-alt="A professional headshot of a female artisan with a friendly, creative smile. She is wearing a modern interpretations of traditional attire and jewelry. The background is a high-end craft exhibition with soft, diffused lighting and warm neutral colors." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD_Bv31YIr6q71GIj5Pq3H7tTuKrrbhrfuQNMPI2Uurt6B0-eEWPsfSQP9woNuY_i6OmqPpOkPHJ_Tbt6BTZIzDEYS0qUbPD5GJmvT7AsSMRtLL8Pmch2pNhXHIDwgAjihfLJDIs2JzLgeGoF6qPpaJtDIyaSAhJAMFV0IsV-eKa6I6vuaQrR-egYxiAyGt7WbuFN7Orw7ziS8_A-wYkW1dj8VFoKeN3vsNCR3SqCP0xsL1bEd6vnjeBU9p_CvDyYJHaN6dineFtCU" />
+                    <div className="relative shrink-0">
+                      <div className="w-14 h-14 rounded-xl overflow-hidden shadow-sm">
+                        <img alt="Artisan 1" data-alt="A professional headshot of a female artisan with a friendly, creative smile. She is wearing a modern interpretations of traditional attire and jewelry. The background is a high-end craft exhibition with soft, diffused lighting and warm neutral colors." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD_Bv31YIr6q71GIj5Pq3H7tTuKrrbhrfuQNMPI2Uurt6B0-eEWPsfSQP9woNuY_i6OmqPpOkPHJ_Tbt6BTZIzDEYS0qUbPD5GJmvT7AsSMRtLL8Pmch2pNhXHIDwgAjihfLJDIs2JzLgeGoF6qPpaJtDIyaSAhJAMFV0IsV-eKa6I6vuaQrR-egYxiAyGt7WbuFN7Orw7ziS8_A-wYkW1dj8VFoKeN3vsNCR3SqCP0xsL1bEd6vnjeBU9p_CvDyYJHaN6dineFtCU" />
+                      </div>
+                      <AvailabilityIndicator status="available" size="sm" className="absolute -bottom-1 -right-1" />
                     </div>
                     <div>
                       <h5 className="font-title-lg text-body-lg text-primary">Meriem Sadi</h5>
@@ -199,16 +210,19 @@ export default function ArtisansPage() {
                       </div>
                     </div>
                   </div>
-                  <button className="flex items-center gap-2 px-6 py-2.5 rounded-full border border-primary text-primary hover:bg-primary hover:text-white transition-all font-label-md text-[13px]">
+                  <Link href="/profile" className="flex items-center gap-2 px-6 py-2.5 rounded-full border border-primary text-primary hover:bg-primary hover:text-white transition-all font-label-md text-[13px]">
                     Profile
                     <span className="material-symbols-outlined text-[18px]">arrow_outward</span>
-                  </button>
+                  </Link>
                 </div>
 
                 <div className="group flex items-center justify-between p-4 rounded-2xl hover:bg-surface-container-low transition-all border-b border-transparent hover:border-primary/10">
                   <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-xl overflow-hidden shadow-sm">
-                      <img alt="Artisan 2" data-alt="A focused headshot of a seasoned male master weaver from Ghardaia. He has a distinguished presence and wears a traditional Saharan garment. The lighting is warm and natural, emphasizing the professional dignity and deep cultural knowledge of his craft." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBzox6LrkyudjCFHXOB_-doIdlmet2DCJXSdWZHzk9fzZfL4qYDN6K3K1W4l0tTBUwUmSsjCEA7rFV0AUglBkK16ncqoLNwgmP76up0ssMamoS49Dil8kg8_nRkOPxH3mXClWPtOWOc8cmMvTAlfAfsXJoc9yWi4xf4RmOvG74fiPUswl7BmWO_EMxhQ3qkoZriyYpxOnakI0BRuxuqbGKVMFmtvfYJXhgcC8yAxMDN435VDtAU_uBbJ93RzoGUm5q9bsCBrvwzj7Q" />
+                    <div className="relative shrink-0">
+                      <div className="w-14 h-14 rounded-xl overflow-hidden shadow-sm">
+                        <img alt="Artisan 2" data-alt="A focused headshot of a seasoned male master weaver from Ghardaia. He has a distinguished presence and wears a traditional Saharan garment. The lighting is warm and natural, emphasizing the professional dignity and deep cultural knowledge of his craft." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBzox6LrkyudjCFHXOB_-doIdlmet2DCJXSdWZHzk9fzZfL4qYDN6K3K1W4l0tTBUwUmSsjCEA7rFV0AUglBkK16ncqoLNwgmP76up0ssMamoS49Dil8kg8_nRkOPxH3mXClWPtOWOc8cmMvTAlfAfsXJoc9yWi4xf4RmOvG74fiPUswl7BmWO_EMxhQ3qkoZriyYpxOnakI0BRuxuqbGKVMFmtvfYJXhgcC8yAxMDN435VDtAU_uBbJ93RzoGUm5q9bsCBrvwzj7Q" />
+                      </div>
+                      <AvailabilityIndicator status="busy" size="sm" className="absolute -bottom-1 -right-1" />
                     </div>
                     <div>
                       <h5 className="font-title-lg text-body-lg text-primary">Ahmed Belkacem</h5>
@@ -228,10 +242,10 @@ export default function ArtisansPage() {
                       </div>
                     </div>
                   </div>
-                  <button className="flex items-center gap-2 px-6 py-2.5 rounded-full border border-primary text-primary hover:bg-primary hover:text-white transition-all font-label-md text-[13px]">
+                  <Link href="/profile" className="flex items-center gap-2 px-6 py-2.5 rounded-full border border-primary text-primary hover:bg-primary hover:text-white transition-all font-label-md text-[13px]">
                     Profile
                     <span className="material-symbols-outlined text-[18px]">arrow_outward</span>
-                  </button>
+                  </Link>
                 </div>
               </div>
               <div className="mt-8 pt-8 border-t border-outline-variant/20 text-center">

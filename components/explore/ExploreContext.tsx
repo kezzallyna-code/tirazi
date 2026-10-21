@@ -134,8 +134,20 @@ export const ExploreProvider: React.FC<{ children: React.ReactNode }> = ({ child
       localStorage.setItem('tirazy_explore_posts', JSON.stringify(initialMockPosts));
     }
 
-    if (storedSaved) {
-      try { setSavedPostIds(JSON.parse(storedSaved)); } catch (e) { setSavedPostIds([]); }
+    try {
+      const storedSaved = localStorage.getItem('tirazy_saved_posts');
+      if (storedSaved) {
+        const parsed = JSON.parse(storedSaved);
+        if (Array.isArray(parsed)) {
+          setSavedPostIds(parsed);
+        } else {
+          setSavedPostIds([]);
+        }
+      } else {
+        setSavedPostIds([]);
+      }
+    } catch (e) {
+      setSavedPostIds([]);
     }
     
     if (storedAppreciated) {
@@ -217,16 +229,26 @@ export const ExploreProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const toggleSavePost = (postId: string) => {
-    if (!checkGuestAction()) return;
-    
-    const hasSaved = savedPostIds.includes(postId);
-    if (hasSaved) {
-      setSavedPostIds(prev => prev.filter(id => id !== postId));
-      showToast("Post removed from saved list.");
-    } else {
-      setSavedPostIds(prev => [...prev, postId]);
-      showToast("Post saved to your list.");
-    }
+    setSavedPostIds((prevSaved) => {
+      const hasSaved = prevSaved.includes(postId);
+      const nextSavedIds = hasSaved
+        ? prevSaved.filter((id) => id !== postId)
+        : [...prevSaved, postId];
+
+      try {
+        localStorage.setItem('tirazy_saved_posts', JSON.stringify(nextSavedIds));
+      } catch (err) {
+        console.error('Failed to update localStorage for tirazy_saved_posts:', err);
+      }
+
+      if (hasSaved) {
+        showToast("Post removed from saved inspirations.");
+      } else {
+        showToast("Post saved to inspirations.");
+      }
+
+      return nextSavedIds;
+    });
   };
 
   const handleFollowToggle = (artisanId: string) => {

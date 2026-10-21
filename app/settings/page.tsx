@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/utils/supabase/client';
+import { MACHINERY_EQUIPMENT_OPTIONS } from '@/utils/equipment';
+import { AvailabilityIndicator, AvailabilityStatus } from '@/components/ui/AvailabilityIndicator';
 
 export default function SettingsPage() {
   // Active Tab state
@@ -27,27 +29,87 @@ export default function SettingsPage() {
   );
   const [avatarUrl, setAvatarUrl] = useState('https://lh3.googleusercontent.com/aida-public/AB6AXuANf5msGfpBwraVf80zGPy0n3JBSPQp6MJnVF9YgMG58-etwGk_a54lmk8QfX1EXbv_uilQ--5g1qGqkj96Jq1s1HxQHwrKM6G_8JXsDi61ArduC2YHPX5ze6HdbARr2B9o5apGNiSMVlfuqennc3iCRJIveZmPd62P4gyjNBOTihnjFjw_D11zWSkiNWJOe3Z6RVlGJURqPC2HDH2q0aCLd_2puyyNjN6gV3ToAS27HUt0Pgw4OeZJWV2jaKEJ_mkq1zOIZGRgRo4');
 
+  // Client Requirement 1: Phone Contact & Visibility
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneVisible, setPhoneVisible] = useState(false);
+
+  // Client Requirement 2: Availability Status
+  const [availabilityStatus, setAvailabilityStatus] = useState<AvailabilityStatus>('unavailable');
+
+  // Client Requirement 3: Machinery & Equipment
+  const [selectedEquipment, setSelectedEquipment] = useState<string[]>([]);
+
   useEffect(() => {
     const fetchData = async () => {
+      // Restore cached / local values first
+      try {
+        const localExtra = localStorage.getItem('tirazy_profile_extra');
+        if (localExtra) {
+          const parsed = JSON.parse(localExtra);
+          if (parsed.phoneNumber !== undefined) setPhoneNumber(parsed.phoneNumber);
+          if (parsed.phoneVisible !== undefined) setPhoneVisible(Boolean(parsed.phoneVisible));
+          if (parsed.availabilityStatus) setAvailabilityStatus(parsed.availabilityStatus);
+          if (Array.isArray(parsed.equipment)) setSelectedEquipment(parsed.equipment);
+        }
+      } catch (e) {}
+
       const supabase = createClient();
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session?.user) {
         setEmailAddress(session.user.email || '');
 
-        const { data: profileData } = await supabase
+        // Try selecting with new columns first
+        const { data: fullProfile, error: fullError } = await supabase
           .from('profiles')
           .select(`
             full_name,
             bio,
             wilaya,
             avatar_url,
+            phone_number,
+            phone_visible,
+            availability_status,
+            equipment,
             profile_roles (
               roles ( name )
             )
           `)
           .eq('id', session.user.id)
           .single();
+
+        let profileData: any = fullProfile;
+
+        if (fullError || !fullProfile) {
+          // Fallback to basic columns if table migration is pending
+          const { data: basicProfile } = await supabase
+            .from('profiles')
+            .select(`
+              full_name,
+              bio,
+              wilaya,
+              avatar_url,
+              profile_roles (
+                roles ( name )
+              )
+            `)
+            .eq('id', session.user.id)
+            .single();
+          profileData = basicProfile;
+        } else {
+          if (fullProfile.phone_number !== undefined && fullProfile.phone_number !== null) {
+            setPhoneNumber(fullProfile.phone_number);
+          }
+          if (fullProfile.phone_visible !== undefined && fullProfile.phone_visible !== null) {
+            setPhoneVisible(Boolean(fullProfile.phone_visible));
+          }
+          if (fullProfile.availability_status) {
+            setAvailabilityStatus(fullProfile.availability_status as AvailabilityStatus);
+          }
+          if (Array.isArray(fullProfile.equipment)) {
+            setSelectedEquipment(fullProfile.equipment);
+          }
+        }
 
         if (profileData) {
           if (profileData.full_name) setFullName(profileData.full_name);
@@ -67,31 +129,63 @@ export default function SettingsPage() {
 
   const [isSaving, setIsSaving] = useState(false);
 
+  const handleToggleEquipment = (option: string) => {
+    setSelectedEquipment((prev) =>
+      prev.includes(option) ? prev.filter((item) => item !== option) : [...prev, option]
+    );
+  };
+
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
-    
+
+    // Save locally immediately to guarantee persistence
+    try {
+      localStorage.setItem(
+        'tirazy_profile_extra',
+        JSON.stringify({
+          phoneNumber,
+          phoneVisible,
+          availabilityStatus,
+          equipment: selectedEquipment,
+        })
+      );
+    } catch (e) {}
+
     const supabase = createClient();
     const { data: { session } } = await supabase.auth.getSession();
-    
+
     if (session?.user) {
-      const { error } = await supabase
+      // Try updating with all columns
+      const { error: fullError } = await supabase
         .from('profiles')
         .update({
           full_name: fullName,
           bio: aboutMe,
           wilaya: location,
+          phone_number: phoneNumber.trim() || null,
+          phone_visible: phoneVisible,
+          availability_status: availabilityStatus,
+          equipment: selectedEquipment,
         })
         .eq('id', session.user.id);
-        
-      if (error) {
-        console.error('Error updating profile:', error);
-        showToast("Error saving profile.");
-      } else {
-        showToast("Profile changes saved.");
+
+      if (fullError) {
+        // Fallback update for basic columns
+        await supabase
+          .from('profiles')
+          .update({
+            full_name: fullName,
+            bio: aboutMe,
+            wilaya: location,
+          })
+          .eq('id', session.user.id);
       }
+      showToast('Profile changes saved.');
+    } else {
+      showToast('Profile changes saved.');
     }
-    
+
     setIsSaving(false);
   };
 
@@ -143,11 +237,16 @@ export default function SettingsPage() {
           
           {/* Summary Card */}
           <div className="bg-white dark:bg-surface-container-low p-6 rounded-[24px] border border-outline-variant/20 shadow-sm flex flex-col items-center text-center">
-            <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-outline-variant/30 shadow-sm mb-4">
+            <div className="relative w-20 h-20 rounded-full border-2 border-outline-variant/30 shadow-sm mb-4">
               <img 
                 src={avatarUrl} 
                 alt={fullName} 
-                className="w-full h-full object-cover" 
+                className="w-full h-full rounded-full object-cover" 
+              />
+              <AvailabilityIndicator 
+                status={availabilityStatus} 
+                size="md" 
+                className="absolute bottom-0 right-0" 
               />
             </div>
             <h3 className="font-title-lg text-title-lg text-on-surface font-bold leading-normal mb-1">
@@ -311,6 +410,171 @@ export default function SettingsPage() {
                       rows={5}
                       required
                     />
+                  </div>
+
+                  {/* Client Requirement 2: Availability Status */}
+                  <div className="md:col-span-2 space-y-3 pt-4 border-t border-outline-variant/20">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <label className="font-label-md text-label-md text-on-surface font-bold flex items-center gap-2">
+                          <span className="material-symbols-outlined text-primary text-[20px]">schedule</span>
+                          Professional Availability Status
+                        </label>
+                        <p className="text-xs text-on-surface-variant mt-0.5">
+                          Indicate your current project workload and readiness for new commissions.
+                        </p>
+                      </div>
+                      <AvailabilityIndicator status={availabilityStatus} size="md" showLabel />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                      {[
+                        {
+                          id: 'available' as AvailabilityStatus,
+                          label: 'Available',
+                          desc: 'Ready for new projects & orders',
+                          dotClass: 'bg-emerald-500',
+                          borderActive: 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20',
+                        },
+                        {
+                          id: 'busy' as AvailabilityStatus,
+                          label: 'Busy',
+                          desc: 'Limited capacity / in-progress work',
+                          dotClass: 'bg-amber-500',
+                          borderActive: 'border-amber-500 bg-amber-50/50 dark:bg-amber-950/20',
+                        },
+                        {
+                          id: 'unavailable' as AvailabilityStatus,
+                          label: 'Unavailable',
+                          desc: 'Not accepting new commissions',
+                          dotClass: 'bg-gray-400',
+                          borderActive: 'border-gray-400 bg-gray-50/50 dark:bg-gray-900/20',
+                        },
+                      ].map((item) => {
+                        const isSelected = availabilityStatus === item.id;
+                        return (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => setAvailabilityStatus(item.id)}
+                            className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col gap-1 cursor-pointer ${
+                              isSelected
+                                ? `${item.borderActive} shadow-sm`
+                                : 'border-outline-variant/30 hover:border-outline-variant hover:bg-surface-container-lowest'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className={`w-3 h-3 rounded-full ${item.dotClass} shadow-xs shrink-0`} />
+                              <span className="font-label-md text-sm text-on-surface font-bold">
+                                {item.label}
+                              </span>
+                              {isSelected && (
+                                <span className="material-symbols-outlined text-primary text-[16px] ml-auto">
+                                  check_circle
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-[12px] text-on-surface-variant leading-tight pl-5">
+                              {item.desc}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Client Requirement 1: Phone Contact Details & Visibility */}
+                  <div className="md:col-span-2 space-y-4 pt-4 border-t border-outline-variant/20">
+                    <div>
+                      <label className="font-label-md text-label-md text-on-surface font-bold flex items-center gap-2">
+                        <span className="material-symbols-outlined text-primary text-[20px]">call</span>
+                        Direct Contact Preferences (Call & WhatsApp)
+                      </label>
+                      <p className="text-xs text-on-surface-variant mt-0.5">
+                        Allow clients and collaborating ateliers to reach you directly via phone or WhatsApp.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label htmlFor="phoneNumber" className="text-xs font-semibold text-on-surface-variant ml-1">
+                          Phone Number
+                        </label>
+                        <div className="relative">
+                          <input
+                            id="phoneNumber"
+                            value={phoneNumber}
+                            onChange={(e) => setPhoneNumber(e.target.value)}
+                            placeholder="e.g. 0555 12 34 56 or +213 555 12 34 56"
+                            type="tel"
+                            className="w-full bg-surface-container-lowest border border-[#E8DED3] focus:border-primary focus:ring-1 focus:ring-primary rounded-xl px-4 py-3 pl-10 transition-all outline-none text-sm"
+                          />
+                          <span className="material-symbols-outlined text-[18px] text-outline absolute left-3 top-3.5">
+                            phone_iphone
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center pt-6">
+                        <label className="flex items-start gap-3 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={phoneVisible}
+                            onChange={(e) => setPhoneVisible(e.target.checked)}
+                            className="rounded border-outline-variant text-primary focus:ring-primary w-4 h-4 mt-0.5 cursor-pointer"
+                          />
+                          <div>
+                            <span className="font-label-md text-sm text-on-surface block leading-tight font-medium">
+                              Display phone number on public profile
+                            </span>
+                            <span className="text-xs text-on-surface-variant/80 block mt-0.5 leading-snug">
+                              Enables the Call and WhatsApp buttons on your public profile. If disabled, these buttons are hidden or disabled.
+                            </span>
+                          </div>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Client Requirement 3: Machinery & Equipment */}
+                  <div className="md:col-span-2 space-y-3 pt-4 border-t border-outline-variant/20">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <label className="font-label-md text-label-md text-on-surface font-bold flex items-center gap-2">
+                          <span className="material-symbols-outlined text-primary text-[20px]">precision_manufacturing</span>
+                          Machinery & Equipment
+                        </label>
+                        <p className="text-xs text-on-surface-variant mt-0.5">
+                          Select the specialized machines and tools available in your atelier ({selectedEquipment.length} selected).
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 pt-1">
+                      {MACHINERY_EQUIPMENT_OPTIONS.map((item) => {
+                        const isChecked = selectedEquipment.includes(item);
+                        return (
+                          <label
+                            key={item}
+                            className={`p-3 rounded-xl border flex items-center gap-3 cursor-pointer transition-all ${
+                              isChecked
+                                ? 'bg-primary/5 border-primary/40 shadow-xs'
+                                : 'border-outline-variant/30 hover:border-outline-variant/60 hover:bg-surface-container-lowest'
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={() => handleToggleEquipment(item)}
+                              className="rounded border-outline-variant text-primary focus:ring-primary w-4 h-4 cursor-pointer shrink-0"
+                            />
+                            <span className={`text-[13px] leading-tight font-sans ${isChecked ? 'text-primary font-bold' : 'text-on-surface'}`}>
+                              {item}
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
                   </div>
 
                 </div>

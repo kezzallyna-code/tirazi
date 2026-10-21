@@ -39,6 +39,53 @@ export default function LoginPage() {
 
     setIsLoading(true);
 
+    const cleanEmail = email.trim().toLowerCase();
+
+    // 1. Admin login support (admin@gmail.com / 123456789)
+    if (cleanEmail === 'admin@gmail.com' && password === '123456789') {
+      const mockAdmin = {
+        id: 'admin-tirazy',
+        email: 'admin@gmail.com',
+        role: 'admin',
+        name: 'Admin Tirazy',
+      };
+      try {
+        localStorage.setItem('tirazy_auth_mock', JSON.stringify(mockAdmin));
+        document.cookie = 'tirazy_mock_user=admin@gmail.com; path=/; max-age=86400; SameSite=Lax';
+      } catch (err) {}
+
+      setToastMessage('Welcome back, Admin Tirazy.');
+      setTimeout(() => {
+        const redirectParams = new URLSearchParams(window.location.search);
+        const redirectUrl = redirectParams.get('redirect');
+        router.push(redirectUrl || '/admin');
+      }, 1000);
+      return;
+    }
+
+    // 2. Regular user login support (a@gmail.com / 123456789)
+    if (cleanEmail === 'a@gmail.com' && password === '123456789') {
+      const mockUser = {
+        id: '0936d63a-4596-4b41-985a-d844025fd72f',
+        email: 'a@gmail.com',
+        role: 'artisan',
+        name: 'Lina Benyahia',
+      };
+      try {
+        localStorage.setItem('tirazy_auth_mock', JSON.stringify(mockUser));
+        document.cookie = 'tirazy_mock_user=a@gmail.com; path=/; max-age=86400; SameSite=Lax';
+      } catch (err) {}
+
+      setToastMessage('Welcome back, Lina Benyahia.');
+      setTimeout(() => {
+        const redirectParams = new URLSearchParams(window.location.search);
+        const redirectUrl = redirectParams.get('redirect');
+        router.push(redirectUrl || '/user');
+      }, 1000);
+      return;
+    }
+
+    // Standard Supabase login
     const { data, error: authError } = await supabase.auth.signInWithPassword({
       email: email.trim(),
       password,

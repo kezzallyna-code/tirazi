@@ -142,6 +142,43 @@ function UserPreviewPageContent() {
           }).filter(Boolean);
           setSavedProjects(formattedSavedProjects as any);
         }
+      } else {
+        // Load mock user session if logged in as a@gmail.com or admin@gmail.com
+        try {
+          const mockAuth = JSON.parse(localStorage.getItem('tirazy_auth_mock') || 'null');
+          if (mockAuth) {
+            setCurrentUserId(mockAuth.id);
+            setProfile({
+              fullName: mockAuth.name || 'Lina Benyahia',
+              roles: [mockAuth.role === 'admin' ? 'Administrator' : 'Fashion Designer'],
+              wilaya: 'Algiers',
+              experience: 'Master Level',
+              bio: 'Passionate about traditional Algerian craftsmanship and contemporary textile creations.',
+              avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=256',
+            });
+            setSelectedPlan('premium_pro');
+            setProjects([
+              {
+                id: 'demo-proj-1',
+                title: 'Modern Karakou Velvet Collection',
+                category: 'Couture',
+                wilaya: 'Algiers',
+                views: 342,
+                appreciations: 89,
+                image: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&q=80&w=800'
+              },
+              {
+                id: 'demo-proj-2',
+                title: 'Amazigh Hand-Embroidered Silk Shawls',
+                category: 'Embroidery',
+                wilaya: 'Tizi Ouzou',
+                views: 512,
+                appreciations: 124,
+                image: 'https://images.unsplash.com/photo-1520006403909-838d6b92c22e?auto=format&fit=crop&q=80&w=800'
+              }
+            ]);
+          }
+        } catch (e) {}
       }
     };
     

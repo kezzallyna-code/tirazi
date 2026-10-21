@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ExploreProvider, useExplore } from '@/components/explore/ExploreContext';
+import AvailabilityIndicator from '@/components/ui/AvailabilityIndicator';
 
 function ExploreLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -105,8 +106,15 @@ function ExploreLayoutContent({ children }: { children: React.ReactNode }) {
                     return (
                       <div key={artisan.id} className="flex flex-col gap-3 p-3 rounded-xl hover:bg-surface-container-low/30 transition-colors">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full overflow-hidden border border-outline-variant/20 shadow-sm shrink-0">
-                            <img src={artisan.avatar} alt={artisan.name} className="w-full h-full object-cover" />
+                          <div className="relative shrink-0">
+                            <div className="w-10 h-10 rounded-full overflow-hidden border border-outline-variant/20 shadow-sm">
+                              <img src={artisan.avatar} alt={artisan.name} className="w-full h-full object-cover" />
+                            </div>
+                            <AvailabilityIndicator 
+                              status={artisan.availability || 'available'} 
+                              size="sm" 
+                              className="absolute -bottom-0.5 -right-0.5" 
+                            />
                           </div>
                           <div className="min-w-0 flex-grow">
                             <div className="flex items-center gap-1">

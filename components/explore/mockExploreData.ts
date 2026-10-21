@@ -15,6 +15,7 @@ export interface Post {
     specialization: string;
     wilaya: string;
     verified: boolean;
+    availability?: 'available' | 'busy' | 'unavailable';
   };
   date: string;
   postType: string;
@@ -35,6 +36,7 @@ export interface SuggestedArtisan {
   wilaya: string;
   verified: boolean;
   isFollowing: boolean;
+  availability?: 'available' | 'busy' | 'unavailable';
 }
 
 export const initialMockPosts: Post[] = [
@@ -173,6 +175,7 @@ export const initialMockArtisans: SuggestedArtisan[] = [
     wilaya: "Tlemcen",
     verified: true,
     isFollowing: false,
+    availability: "available",
   },
   {
     id: "artisan-rachid",
@@ -182,6 +185,7 @@ export const initialMockArtisans: SuggestedArtisan[] = [
     wilaya: "Oran",
     verified: true,
     isFollowing: false,
+    availability: "busy",
   },
   {
     id: "artisan-fatima",
@@ -191,5 +195,6 @@ export const initialMockArtisans: SuggestedArtisan[] = [
     wilaya: "Ghardaia",
     verified: false,
     isFollowing: false,
+    availability: "available",
   }
 ];

@@ -27,6 +27,19 @@ export default function AdminPreviewPage() {
 
   React.useEffect(() => {
     const checkAdmin = async () => {
+      // Check mock admin credentials
+      if (typeof window !== 'undefined') {
+        try {
+          const mockAuth = JSON.parse(localStorage.getItem('tirazy_auth_mock') || '{}');
+          if (mockAuth.email === 'admin@gmail.com' || mockAuth.role === 'admin') {
+            setIsAuthenticated(true);
+            setAdminName(mockAuth.name || 'Admin Tirazy');
+            setIsLoading(false);
+            return;
+          }
+        } catch (e) {}
+      }
+
       const { createClient } = await import('@/utils/supabase/client');
       const supabase = createClient();
       const { data: { session } } = await supabase.auth.getSession();

@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { Post, Comment } from './mockExploreData';
 import { useExplore } from './ExploreContext';
+import AvailabilityIndicator from '@/components/ui/AvailabilityIndicator';
 
 interface PostCardProps {
   post: Post;
@@ -77,8 +78,15 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
       {/* Header */}
       <div className="p-6 pb-4 flex justify-between items-start">
         <div className="flex gap-4">
-          <div className="w-11 h-11 rounded-full overflow-hidden border border-outline-variant/20 shadow-sm shrink-0">
-            <img src={post.artisan?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=256'} alt={post.artisan?.name || 'Artisan'} className="w-full h-full object-cover" />
+          <div className="relative shrink-0">
+            <div className="w-11 h-11 rounded-full overflow-hidden border border-outline-variant/20 shadow-sm">
+              <img src={post.artisan?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=256'} alt={post.artisan?.name || 'Artisan'} className="w-full h-full object-cover" />
+            </div>
+            <AvailabilityIndicator
+              status={post.artisan?.availability || 'available'}
+              size="sm"
+              className="absolute -bottom-0.5 -right-0.5"
+            />
           </div>
           <div>
             <div className="flex items-center gap-1.5">
@@ -233,11 +241,18 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
         <button 
           onClick={() => toggleSavePost(post.id)}
           className={`flex items-center justify-center gap-2 py-2 px-3 rounded-xl flex-grow font-label-md text-label-md transition-colors hover:bg-surface-variant/30 ${
-            hasSaved ? 'text-primary font-bold' : 'text-on-surface-variant/80'
+            hasSaved ? 'text-primary font-bold bg-primary/10' : 'text-on-surface-variant/80'
           }`}
+          title={hasSaved ? 'Saved' : 'Save'}
+          aria-label={hasSaved ? 'Saved' : 'Save'}
         >
-          <span className="material-symbols-outlined text-[20px]" data-weight={hasSaved ? 'fill' : undefined}>bookmark</span>
-          <span className="hidden sm:inline">{hasSaved ? 'Saved' : 'Save'}</span>
+          <span 
+            className="material-symbols-outlined text-[20px]" 
+            style={{ fontVariationSettings: hasSaved ? "'FILL' 1" : "'FILL' 0" }}
+          >
+            bookmark
+          </span>
+          <span>{hasSaved ? 'Saved' : 'Save'}</span>
         </button>
 
       </div>

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Logo from '@/components/Logo';
 import { createClient } from '@/utils/supabase/client';
+import AvailabilityIndicator from '@/components/ui/AvailabilityIndicator';
 
 export function Navbar() {
   const pathname = usePathname();
@@ -22,20 +23,60 @@ export function Navbar() {
       const { data: { session } } = await supabase.auth.getSession();
       setSession(session);
       if (session?.user) {
-        const { data, error } = await supabase
+        // Try fetching with availability_status
+        let res = await supabase
           .from('profiles')
           .select(`
             full_name,
             avatar_url,
+            availability_status,
             profile_roles (
               roles ( name )
             )
           `)
           .eq('id', session.user.id)
           .single();
-        if (!error && data) {
-          setProfile(data);
+
+        if (res.error) {
+          // Fallback if column not yet added
+          res = await supabase
+            .from('profiles')
+            .select(`
+              full_name,
+              avatar_url,
+              profile_roles (
+                roles ( name )
+              )
+            `)
+            .eq('id', session.user.id)
+            .single();
         }
+
+        if (!res.error && res.data) {
+          // Overlay local extra if available
+          let extra: any = {};
+          try {
+            extra = JSON.parse(localStorage.getItem('tirazy_profile_extra') || '{}');
+          } catch (e) {}
+          setProfile({
+            ...res.data,
+            availability_status: res.data.availability_status || extra.availability_status || 'available'
+          });
+        }
+      } else {
+        // Check mock login credentials
+        try {
+          const mockUser = JSON.parse(localStorage.getItem('tirazy_auth_mock') || 'null');
+          if (mockUser) {
+            setSession({ user: { id: mockUser.id, email: mockUser.email } });
+            setProfile({
+              full_name: mockUser.name,
+              avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=256',
+              availability_status: 'available',
+              profile_roles: [{ roles: { name: mockUser.role === 'admin' ? 'Administrator' : 'Fashion Designer' } }]
+            });
+          }
+        } catch (e) {}
       }
       setIsLoading(false);
     };
@@ -91,6 +132,10 @@ export function Navbar() {
 
   const handleLogout = async () => {
     setIsProfileDropdownOpen(false);
+    try {
+      localStorage.removeItem('tirazy_auth_mock');
+      document.cookie = 'tirazy_mock_user=; path=/; max-age=0';
+    } catch (e) {}
     await supabase.auth.signOut();
     // Use the route to clear server cookies as well
     await fetch('/auth/logout', { method: 'POST' });
@@ -180,11 +225,18 @@ export function Navbar() {
                 aria-expanded={isProfileDropdownOpen}
                 aria-label="User profile menu"
               >
-                <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-surface-variant shadow-sm">
-                  <img 
-                    src={displayAvatar} 
-                    alt="Profile" 
-                    className="w-full h-full object-cover"
+                <div className="relative shrink-0">
+                  <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-surface-variant shadow-sm">
+                    <img 
+                      src={displayAvatar} 
+                      alt="Profile" 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <AvailabilityIndicator 
+                    status={profile?.availability_status || 'available'}
+                    size="sm"
+                    className="absolute -bottom-0.5 -right-0.5"
                   />
                 </div>
                 <span className="material-symbols-outlined text-on-surface-variant text-[20px] hidden md:block">
