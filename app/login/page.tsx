@@ -259,13 +259,10 @@ export default function LoginPage() {
                       setPassword('123456789');
                       setError(null);
                     }}
-                    className="p-2.5 rounded-xl border border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary transition-all text-left flex flex-col cursor-pointer"
+                    className="p-3 rounded-xl border border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <span className="font-bold text-[12px] flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[15px]">shield_person</span>
-                      Admin
-                    </span>
-                    <span className="text-[10px] text-on-surface-variant/80 font-mono truncate">admin@gmail.com</span>
+                    <span className="material-symbols-outlined text-[18px]">shield_person</span>
+                    <span className="font-bold text-[13px]">Admin</span>
                   </button>
 
                   <button
@@ -275,13 +272,10 @@ export default function LoginPage() {
                       setPassword('123456789');
                       setError(null);
                     }}
-                    className="p-2.5 rounded-xl border border-outline-variant/30 bg-surface-container-low hover:bg-surface-container text-on-surface transition-all text-left flex flex-col cursor-pointer"
+                    className="p-3 rounded-xl border border-outline-variant/30 bg-surface-container-low hover:bg-surface-container text-on-surface transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <span className="font-bold text-[12px] flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[15px]">person</span>
-                      Artisan (User)
-                    </span>
-                    <span className="text-[10px] text-on-surface-variant/80 font-mono truncate">a@gmail.com</span>
+                    <span className="material-symbols-outlined text-[18px]">person</span>
+                    <span className="font-bold text-[13px]">Artisan</span>
                   </button>
                 </div>
               </div>
