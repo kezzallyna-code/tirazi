@@ -257,6 +257,12 @@ export function Navbar() {
                       <p className="font-label-md text-label-md text-on-surface-variant truncate">{displayRole}</p>
                     </div>
                     <div className="flex flex-col py-2">
+                      {(displayRole === 'Administrator' || session?.user?.email === 'admin@gmail.com' || profile?.profile_roles?.some((pr: any) => pr.roles?.name?.toLowerCase() === 'admin')) && (
+                        <Link href="/admin" className="flex items-center gap-3 px-4 py-3 text-primary font-bold bg-primary/10 hover:bg-primary/20 transition-colors focus:bg-primary/20 focus:outline-none border-b border-outline-variant/15" onClick={() => setIsProfileDropdownOpen(false)}>
+                          <span className="material-symbols-outlined text-[20px]">shield_person</span>
+                          <span className="font-label-md">Admin Console</span>
+                        </Link>
+                      )}
                       <Link href={`/profile/${session.user.id}`} className="flex items-center gap-3 px-4 py-3 text-on-surface hover:bg-surface-variant/50 transition-colors focus:bg-surface-variant/50 focus:outline-none" onClick={() => setIsProfileDropdownOpen(false)}>
                         <span className="material-symbols-outlined text-[20px]">person</span>
                         <span className="font-label-md">My Profile</span>

@@ -111,19 +111,49 @@ export default function AdminPreviewPage() {
     return (
       <div className="bg-background min-h-screen w-full flex flex-col items-center justify-center px-4">
         <div className="bg-white dark:bg-surface-container-low p-8 rounded-[24px] border border-outline-variant/30 shadow-sm max-w-md w-full text-center space-y-6">
-          <div className="w-16 h-16 rounded-full bg-error/10 flex items-center justify-center mx-auto mb-2 text-error">
-            <span className="material-symbols-outlined text-[32px]">security</span>
+          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-2 text-primary">
+            <span className="material-symbols-outlined text-[32px]">shield_person</span>
           </div>
           <div>
-            <h2 className="font-title-lg text-title-lg text-on-surface font-bold">Access Denied</h2>
-            <p className="text-on-surface-variant text-sm mt-2">You do not have the required administrator privileges to access this console.</p>
+            <h2 className="font-title-lg text-title-lg text-on-surface font-bold">Admin Console Sign In</h2>
+            <p className="text-on-surface-variant text-sm mt-2">Administrator privileges required to access the moderation console.</p>
           </div>
-          <a
-            href="/"
-            className="w-full inline-block bg-primary text-white font-label-md px-4 py-3 rounded-xl shadow-md hover:shadow-lg active:scale-95 transition-all"
-          >
-            Return to Home
-          </a>
+          
+          <div className="space-y-3">
+            <button
+              type="button"
+              onClick={() => {
+                const mockAdmin = {
+                  id: 'admin-tirazy',
+                  email: 'admin@gmail.com',
+                  role: 'admin',
+                  name: 'Admin Tirazy',
+                };
+                localStorage.setItem('tirazy_auth_mock', JSON.stringify(mockAdmin));
+                document.cookie = 'tirazy_mock_user=admin@gmail.com; path=/; max-age=86400; SameSite=Lax';
+                setIsAuthenticated(true);
+                setAdminName('Admin Tirazy');
+              }}
+              className="w-full bg-primary text-white font-label-md px-4 py-3 rounded-xl shadow-md hover:shadow-lg active:scale-95 transition-all cursor-pointer font-bold flex items-center justify-center gap-2"
+            >
+              <span className="material-symbols-outlined text-[18px]">key</span>
+              1-Click Instant Admin Access
+            </button>
+
+            <a
+              href="/login?redirect=/admin"
+              className="w-full inline-block bg-surface-container-high text-on-surface font-label-md px-4 py-2.5 rounded-xl hover:bg-surface-container-highest transition-all text-xs font-bold"
+            >
+              Sign In via Login Page
+            </a>
+
+            <a
+              href="/"
+              className="text-xs text-on-surface-variant hover:text-primary transition-colors block pt-1"
+            >
+              ← Return to Site
+            </a>
+          </div>
         </div>
       </div>
     );

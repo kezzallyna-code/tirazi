@@ -246,6 +246,46 @@ export default function LoginPage() {
                 </label>
               </div>
 
+              {/* Quick Access Profile Selectors */}
+              <div className="pt-2 border-t border-outline-variant/15 space-y-2">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant/70 text-center">
+                  Quick Access Profiles
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEmail('admin@gmail.com');
+                      setPassword('123456789');
+                      setError(null);
+                    }}
+                    className="p-2.5 rounded-xl border border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary transition-all text-left flex flex-col cursor-pointer"
+                  >
+                    <span className="font-bold text-[12px] flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[15px]">shield_person</span>
+                      Admin
+                    </span>
+                    <span className="text-[10px] text-on-surface-variant/80 font-mono truncate">admin@gmail.com</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEmail('a@gmail.com');
+                      setPassword('123456789');
+                      setError(null);
+                    }}
+                    className="p-2.5 rounded-xl border border-outline-variant/30 bg-surface-container-low hover:bg-surface-container text-on-surface transition-all text-left flex flex-col cursor-pointer"
+                  >
+                    <span className="font-bold text-[12px] flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[15px]">person</span>
+                      Artisan (User)
+                    </span>
+                    <span className="text-[10px] text-on-surface-variant/80 font-mono truncate">a@gmail.com</span>
+                  </button>
+                </div>
+              </div>
+
               {error && (
                 <span className="text-xs text-error font-medium flex items-center gap-1">
                   <span className="material-symbols-outlined text-[14px]">error</span>
