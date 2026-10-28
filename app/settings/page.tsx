@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/utils/supabase/client';
-import { MACHINERY_EQUIPMENT_OPTIONS } from '@/utils/equipment';
+import { MACHINERY_EQUIPMENT_OPTIONS, validateEquipment } from '@/utils/equipment';
 import { AvailabilityIndicator, AvailabilityStatus } from '@/components/ui/AvailabilityIndicator';
 
 export default function SettingsPage() {
@@ -139,6 +139,8 @@ export default function SettingsPage() {
     e.preventDefault();
     setIsSaving(true);
 
+    const validEquipment = validateEquipment(selectedEquipment);
+
     // Save locally immediately to guarantee persistence
     try {
       localStorage.setItem(
@@ -147,7 +149,7 @@ export default function SettingsPage() {
           phoneNumber,
           phoneVisible,
           availabilityStatus,
-          equipment: selectedEquipment,
+          equipment: validEquipment,
         })
       );
     } catch (e) {}
@@ -166,7 +168,7 @@ export default function SettingsPage() {
           phone_number: phoneNumber.trim() || null,
           phone_visible: phoneVisible,
           availability_status: availabilityStatus,
-          equipment: selectedEquipment,
+          equipment: validEquipment,
         })
         .eq('id', session.user.id);
 
@@ -440,8 +442,8 @@ export default function SettingsPage() {
                           id: 'busy' as AvailabilityStatus,
                           label: 'Busy',
                           desc: 'Limited capacity / in-progress work',
-                          dotClass: 'bg-amber-500',
-                          borderActive: 'border-amber-500 bg-amber-50/50 dark:bg-amber-950/20',
+                          dotClass: 'bg-orange-500',
+                          borderActive: 'border-orange-500 bg-orange-50/50 dark:bg-orange-950/20',
                         },
                         {
                           id: 'unavailable' as AvailabilityStatus,

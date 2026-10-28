@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { createClient } from '@/utils/supabase/server';
 import { notFound } from 'next/navigation';
 import { AvailabilityIndicator } from '@/components/ui/AvailabilityIndicator';
-import { formatPhoneNumber } from '@/utils/equipment';
+import { formatPhoneNumber, validateEquipment } from '@/utils/equipment';
 
 export default async function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -107,8 +107,8 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
   const phoneFormatted = formatPhoneNumber(rawPhoneNumber);
   const canContactPhone = isPhoneVisibleToViewer && phoneFormatted.isValid;
 
-  // Machinery & Equipment (Requirement 3)
-  const equipment: string[] = Array.isArray(profile.equipment) ? profile.equipment : [];
+  // Machinery & Equipment (Requirement 3: strictly validate against approved 9 options)
+  const equipment: string[] = validateEquipment(profile.equipment);
 
   return (
     <div className="stitch-screen-wrapper">
@@ -116,28 +116,28 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
       <main className="pt-20 pb-12">
 
         {/* Cover & Profile Header */}
-        <div className="relative w-full h-[400px] overflow-hidden bg-surface-dim group">
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-black/20 z-10"></div>
+        <div className="relative w-full min-h-[380px] md:h-[400px] overflow-hidden bg-surface-dim group">
+          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/40 to-black/20 z-10"></div>
           <img 
             className="w-full h-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-105" 
             src="https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&fit=crop&q=80&w=2000" 
             alt="Cover" 
           />
-          <div className="absolute bottom-10 left-margin-desktop right-margin-desktop flex justify-between items-end max-w-container-max mx-auto z-20">
-            <div className="flex items-center gap-8">
+          <div className="absolute bottom-6 md:bottom-10 left-4 right-4 md:left-margin-desktop md:right-margin-desktop flex flex-col md:flex-row justify-between items-start md:items-end gap-6 max-w-container-max mx-auto z-20">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-8">
               {/* Profile Avatar with Requirement 2: Availability Dot at bottom-right */}
-              <div className="relative w-40 h-40 rounded-3xl border-4 border-surface shadow-xl bg-white translate-y-20 shrink-0">
+              <div className="relative w-28 h-28 sm:w-36 sm:h-36 md:w-40 md:h-40 rounded-3xl border-4 border-surface shadow-xl bg-white translate-y-10 sm:translate-y-16 md:translate-y-20 shrink-0">
                 <img className="w-full h-full rounded-[20px] object-cover" alt={fullName} src={avatarUrl} />
-                <div className="absolute bottom-2 right-2">
+                <div className="absolute bottom-1 right-1 sm:bottom-2 sm:right-2">
                   <AvailabilityIndicator status={availabilityStatus} size="lg" />
                 </div>
               </div>
-              <div className="text-white pb-4">
-                <h1 className="font-headline-md text-headline-md mb-1">{fullName}</h1>
-                <div className="flex flex-wrap items-center gap-3">
-                  <p className="font-body-lg text-body-lg opacity-90">{roles}</p>
+              <div className="text-white pt-2 sm:pt-0 sm:pb-2 md:pb-4">
+                <h1 className="font-headline-md text-2xl sm:text-headline-md mb-1">{fullName}</h1>
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                  <p className="font-body-md sm:font-body-lg text-sm sm:text-body-lg opacity-90">{roles}</p>
                   <span className="w-1.5 h-1.5 rounded-full bg-white/60"></span>
-                  <div className="bg-black/30 backdrop-blur-md px-3 py-0.5 rounded-full border border-white/20">
+                  <div className="bg-black/40 backdrop-blur-md px-3 py-0.5 rounded-full border border-white/20">
                     <AvailabilityIndicator status={availabilityStatus} size="sm" showLabel />
                   </div>
                 </div>
@@ -145,11 +145,11 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
             </div>
 
             {/* Requirement 1: [Message] [Call] [WhatsApp] */}
-            <div className="flex flex-wrap items-center gap-3 pb-4">
+            <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 pb-2 md:pb-4 w-full sm:w-auto">
               {/* Message Button (Preserved) */}
               <Link 
                 href={`/messages?recipient=${id}`} 
-                className="px-6 py-3 bg-white text-primary font-label-md text-label-md rounded-full shadow-lg hover:bg-surface-container-low transition-all active:scale-95 flex items-center gap-2"
+                className="flex-1 sm:flex-initial justify-center px-5 sm:px-6 py-2.5 sm:py-3 bg-white text-primary font-label-md text-xs sm:text-label-md rounded-full shadow-lg hover:bg-surface-container-low transition-all active:scale-95 flex items-center gap-2"
               >
                 <span className="material-symbols-outlined text-[18px]">chat_bubble</span>
                 Message
@@ -159,7 +159,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
               {canContactPhone ? (
                 <a
                   href={`tel:${phoneFormatted.tel}`}
-                  className="px-6 py-3 bg-white text-primary font-label-md text-label-md rounded-full shadow-lg hover:bg-surface-container-low transition-all active:scale-95 flex items-center gap-2"
+                  className="flex-1 sm:flex-initial justify-center px-5 sm:px-6 py-2.5 sm:py-3 bg-white text-primary font-label-md text-xs sm:text-label-md rounded-full shadow-lg hover:bg-surface-container-low transition-all active:scale-95 flex items-center gap-2"
                   title={`Call ${fullName} at ${phoneFormatted.raw}`}
                 >
                   <span className="material-symbols-outlined text-[18px]">call</span>
@@ -168,7 +168,8 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
               ) : (
                 <button
                   disabled
-                  className="px-6 py-3 bg-white/50 text-on-surface-variant/40 font-label-md text-label-md rounded-full cursor-not-allowed flex items-center gap-2"
+                  aria-disabled="true"
+                  className="flex-1 sm:flex-initial justify-center px-5 sm:px-6 py-2.5 sm:py-3 bg-white/50 text-on-surface-variant/40 font-label-md text-xs sm:text-label-md rounded-full cursor-not-allowed flex items-center gap-2"
                   title={profile.phone_number ? "Phone number is set to private" : "Phone number not provided"}
                 >
                   <span className="material-symbols-outlined text-[18px]">call</span>
@@ -182,20 +183,33 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
                   href={`https://wa.me/${phoneFormatted.whatsapp}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-6 py-3 bg-white text-primary font-label-md text-label-md rounded-full shadow-lg hover:bg-surface-container-low transition-all active:scale-95 flex items-center gap-2"
+                  className="flex-1 sm:flex-initial justify-center px-5 sm:px-6 py-2.5 sm:py-3 bg-white text-primary font-label-md text-xs sm:text-label-md rounded-full shadow-lg hover:bg-surface-container-low transition-all active:scale-95 flex items-center gap-2"
                   title={`Open WhatsApp chat with ${fullName}`}
                 >
-                  <span className="material-symbols-outlined text-[18px]">chat</span>
-                  WhatsApp
+                  <svg
+                    className="w-[18px] h-[18px] fill-[#25D366] shrink-0"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.3 20.62C8.75 21.41 10.38 21.83 12.04 21.83C17.5 21.83 21.95 17.38 21.95 11.92C21.95 9.27 20.92 6.78 19.05 4.91C17.18 3.03 14.69 2 12.04 2ZM12.05 3.67C14.25 3.67 16.31 4.53 17.87 6.09C19.42 7.65 20.28 9.72 20.28 11.92C20.28 16.46 16.58 20.15 12.04 20.15C10.56 20.15 9.11 19.76 7.85 19.01L7.55 18.83L4.43 19.65L5.26 16.61L5.06 16.29C4.24 14.99 3.8 13.47 3.8 11.91C3.81 7.37 7.5 3.67 12.05 3.67ZM8.53 7.33C8.36 7.33 8.1 7.4 7.87 7.64C7.65 7.89 7.02 8.48 7.02 9.68C7.02 10.88 7.9 12.04 8.02 12.2C8.14 12.37 9.73 14.83 12.18 15.89C12.77 16.14 13.22 16.29 13.58 16.41C14.17 16.6 14.71 16.57 15.13 16.51C15.61 16.44 16.6 15.91 16.81 15.33C17.02 14.74 17.02 14.24 16.96 14.14C16.9 14.04 16.73 13.98 16.47 13.85C16.21 13.72 14.96 13.11 14.73 13.02C14.5 12.94 14.34 12.9 14.17 13.15C14.01 13.4 13.54 13.98 13.39 14.14C13.25 14.31 13.1 14.33 12.85 14.2C12.59 14.08 11.78 13.81 10.81 12.95C10.06 12.28 9.55 11.45 9.4 11.2C9.26 10.95 9.39 10.82 9.52 10.69C9.63 10.58 9.77 10.4 9.9 10.25C10.03 10.1 10.07 9.99 10.16 9.82C10.24 9.66 10.2 9.51 10.14 9.39C10.07 9.26 9.61 8.13 9.42 7.67C9.24 7.22 9.05 7.28 8.91 7.27C8.78 7.27 8.65 7.33 8.53 7.33Z" />
+                  </svg>
+                  <span>WhatsApp</span>
                 </a>
               ) : (
                 <button
                   disabled
-                  className="px-6 py-3 bg-white/50 text-on-surface-variant/40 font-label-md text-label-md rounded-full cursor-not-allowed flex items-center gap-2"
+                  aria-disabled="true"
+                  className="flex-1 sm:flex-initial justify-center px-5 sm:px-6 py-2.5 sm:py-3 bg-white/50 text-on-surface-variant/40 font-label-md text-xs sm:text-label-md rounded-full cursor-not-allowed flex items-center gap-2"
                   title={profile.phone_number ? "WhatsApp contact is set to private" : "WhatsApp not provided"}
                 >
-                  <span className="material-symbols-outlined text-[18px]">chat</span>
-                  WhatsApp
+                  <svg
+                    className="w-[18px] h-[18px] fill-current opacity-40 shrink-0"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.3 20.62C8.75 21.41 10.38 21.83 12.04 21.83C17.5 21.83 21.95 17.38 21.95 11.92C21.95 9.27 20.92 6.78 19.05 4.91C17.18 3.03 14.69 2 12.04 2ZM12.05 3.67C14.25 3.67 16.31 4.53 17.87 6.09C19.42 7.65 20.28 9.72 20.28 11.92C20.28 16.46 16.58 20.15 12.04 20.15C10.56 20.15 9.11 19.76 7.85 19.01L7.55 18.83L4.43 19.65L5.26 16.61L5.06 16.29C4.24 14.99 3.8 13.47 3.8 11.91C3.81 7.37 7.5 3.67 12.05 3.67ZM8.53 7.33C8.36 7.33 8.1 7.4 7.87 7.64C7.65 7.89 7.02 8.48 7.02 9.68C7.02 10.88 7.9 12.04 8.02 12.2C8.14 12.37 9.73 14.83 12.18 15.89C12.77 16.14 13.22 16.29 13.58 16.41C14.17 16.6 14.71 16.57 15.13 16.51C15.61 16.44 16.6 15.91 16.81 15.33C17.02 14.74 17.02 14.24 16.96 14.14C16.9 14.04 16.73 13.98 16.47 13.85C16.21 13.72 14.96 13.11 14.73 13.02C14.5 12.94 14.34 12.9 14.17 13.15C14.01 13.4 13.54 13.98 13.39 14.14C13.25 14.31 13.1 14.33 12.85 14.2C12.59 14.08 11.78 13.81 10.81 12.95C10.06 12.28 9.55 11.45 9.4 11.2C9.26 10.95 9.39 10.82 9.52 10.69C9.63 10.58 9.77 10.4 9.9 10.25C10.03 10.1 10.07 9.99 10.16 9.82C10.24 9.66 10.2 9.51 10.14 9.39C10.07 9.26 9.61 8.13 9.42 7.67C9.24 7.22 9.05 7.28 8.91 7.27C8.78 7.27 8.65 7.33 8.53 7.33Z" />
+                  </svg>
+                  <span>WhatsApp</span>
                 </button>
               )}
             </div>
@@ -238,20 +252,20 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
             </div>
 
             {/* Client Requirement 3: Machinery & Equipment Section */}
-            <div className="bg-white p-8 rounded-[24px] shadow-sm flex flex-col gap-4">
+            <div className="bg-white p-6 sm:p-8 rounded-[24px] shadow-sm flex flex-col gap-4">
               <div className="flex items-center gap-2 text-primary">
                 <span className="material-symbols-outlined text-[20px]">precision_manufacturing</span>
-                <h3 className="font-label-md text-label-md uppercase tracking-widest">Machinery & Equipment</h3>
+                <h3 className="font-label-md text-label-md uppercase tracking-widest font-bold">Machinery & Equipment</h3>
               </div>
               {equipment.length > 0 ? (
                 <div className="flex flex-wrap gap-2 pt-1">
                   {equipment.map((item) => (
                     <span
                       key={item}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-container-low text-on-surface border border-outline-variant/30 text-[12px] font-sans font-medium hover:border-primary/40 transition-colors"
+                      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-surface-container-low text-on-surface border border-outline-variant/30 text-[12px] font-sans font-medium hover:border-primary/40 transition-colors break-words leading-snug"
                     >
                       <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0"></span>
-                      {item}
+                      <span>{item}</span>
                     </span>
                   ))}
                 </div>
@@ -279,27 +293,6 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
 
           {/* Right Column: Portfolio Showcase */}
           <section className="flex-1">
-            {/* Machinery & Equipment Chips Banner before Portfolio */}
-            {equipment.length > 0 && (
-              <div className="mb-8 p-6 bg-white dark:bg-surface-container-low rounded-[24px] border border-outline-variant/20 shadow-xs">
-                <div className="flex items-center gap-2 text-primary mb-3">
-                  <span className="material-symbols-outlined text-[20px]">precision_manufacturing</span>
-                  <h3 className="font-headline-sm text-[16px] text-primary">Atelier Machinery & Equipment</h3>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {equipment.map((item) => (
-                    <span
-                      key={item}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-primary/5 text-primary border border-primary/20 text-[13px] font-medium"
-                    >
-                      <span className="material-symbols-outlined text-[14px]">check</span>
-                      {item}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
             <div className="flex justify-between items-center mb-8">
               <h2 className="font-headline-sm text-headline-sm">Portfolio Showcase</h2>
             </div>
@@ -339,9 +332,9 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
             <p className="text-on-surface-variant text-sm">The Professional Network for Algerian Textile Heritage.</p>
           </div>
           <div className="flex gap-8">
-            <Link className="text-on-surface-variant hover:text-primary transition-colors text-sm" href="#">Privacy Policy</Link>
-            <Link className="text-on-surface-variant hover:text-primary transition-colors text-sm" href="#">Terms of Service</Link>
-            <Link className="text-on-surface-variant hover:text-primary transition-colors text-sm" href="#">Contact Support</Link>
+            <Link className="text-on-surface-variant hover:text-primary transition-colors text-sm" href="/contact#privacy">Privacy Policy</Link>
+            <Link className="text-on-surface-variant hover:text-primary transition-colors text-sm" href="/contact#terms">Terms of Service</Link>
+            <Link className="text-on-surface-variant hover:text-primary transition-colors text-sm" href="/contact">Contact Support</Link>
           </div>
           <div className="text-on-surface-variant text-sm">
             © 2024 TIRAZY. All rights reserved.

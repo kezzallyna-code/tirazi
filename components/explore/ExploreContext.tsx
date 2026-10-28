@@ -47,8 +47,8 @@ const fallbackMockUser = {
 };
 
 export const ExploreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [suggestedArtisans, setSuggestedArtisans] = useState<SuggestedArtisan[]>([]);
+  const [posts, setPosts] = useState<Post[]>(initialMockPosts);
+  const [suggestedArtisans, setSuggestedArtisans] = useState<SuggestedArtisan[]>(initialMockArtisans);
   const [savedPostIds, setSavedPostIds] = useState<string[]>([]);
   const [appreciatedPosts, setAppreciatedPosts] = useState<string[]>([]);
   const [following, setFollowing] = useState<string[]>([]);
@@ -56,11 +56,11 @@ export const ExploreProvider: React.FC<{ children: React.ReactNode }> = ({ child
   
   const [activeCategory, setActiveCategory] = useState<string>('All Categories');
 
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(true);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   
-  const [currentUser, setCurrentUser] = useState<any | null>(null);
-  const [isGuest, setIsGuest] = useState<boolean>(true);
+  const [currentUser, setCurrentUser] = useState<any | null>(fallbackMockUser);
+  const [isGuest, setIsGuest] = useState<boolean>(false);
   const [showGuestModal, setShowGuestModal] = useState(false);
 
   const showToast = (message: string) => {

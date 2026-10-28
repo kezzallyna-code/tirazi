@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import AvailabilityIndicator from '@/components/ui/AvailabilityIndicator';
 
 interface UserOverviewProps {
   userData: {
@@ -9,6 +10,7 @@ interface UserOverviewProps {
     avatarUrl: string;
     bio: string;
     experience: string;
+    availabilityStatus?: string;
   };
   selectedPlan: string;
   userProjects: Array<{
@@ -42,8 +44,11 @@ export function UserOverview({
       {/* Welcome Area */}
       <div className="bg-white dark:bg-surface-container-low p-6 rounded-[28px] border border-outline-variant/15 shadow-sm flex flex-col sm:flex-row items-center sm:justify-between gap-6">
         <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
-          <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-primary/20 bg-surface">
-            <img src={userData.avatarUrl} alt={userData.fullName} className="w-full h-full object-cover" />
+          <div className="relative w-20 h-20 rounded-full border-2 border-primary/20 bg-surface">
+            <img src={userData.avatarUrl} alt={userData.fullName} className="w-full h-full object-cover rounded-full" />
+            <div className="absolute bottom-0 right-0 p-0.5 bg-white dark:bg-surface rounded-full shadow-sm">
+              <AvailabilityIndicator status={userData.availabilityStatus || 'unavailable'} size="md" />
+            </div>
           </div>
           <div>
             <h2 className="font-headline-sm text-headline-sm text-primary mb-1">

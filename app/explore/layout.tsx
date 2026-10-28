@@ -111,7 +111,7 @@ function ExploreLayoutContent({ children }: { children: React.ReactNode }) {
                               <img src={artisan.avatar} alt={artisan.name} className="w-full h-full object-cover" />
                             </div>
                             <AvailabilityIndicator 
-                              status={artisan.availability || 'available'} 
+                              status={artisan.availability || 'unavailable'} 
                               size="sm" 
                               className="absolute -bottom-0.5 -right-0.5" 
                             />

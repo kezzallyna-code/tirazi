@@ -60,7 +60,7 @@ export function Navbar() {
           } catch (e) {}
           setProfile({
             ...res.data,
-            availability_status: res.data.availability_status || extra.availability_status || 'available'
+            availability_status: res.data.availability_status || extra.availability_status || 'unavailable'
           });
         }
       } else {
@@ -72,7 +72,7 @@ export function Navbar() {
             setProfile({
               full_name: mockUser.name,
               avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=256',
-              availability_status: 'available',
+              availability_status: mockUser.availability_status || 'unavailable',
               profile_roles: [{ roles: { name: mockUser.role === 'admin' ? 'Administrator' : 'Fashion Designer' } }]
             });
           }
@@ -234,7 +234,7 @@ export function Navbar() {
                     />
                   </div>
                   <AvailabilityIndicator 
-                    status={profile?.availability_status || 'available'}
+                    status={profile?.availability_status || 'unavailable'}
                     size="sm"
                     className="absolute -bottom-0.5 -right-0.5"
                   />

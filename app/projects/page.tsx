@@ -233,7 +233,17 @@ export default function ProjectsPage() {
             <p className="font-body-lg text-body-lg text-on-surface-variant">Connect with Algeria's finest textile artisans, designers, and manufacturers to bring your creative vision to life.</p>
           </div>
           <div className="flex gap-3">
-            <button className="flex items-center gap-2 px-6 py-3 border border-primary text-primary rounded-full font-label-md hover:bg-primary/5 transition-colors">
+            <button 
+              type="button"
+              onClick={() => {
+                const searchInput = document.getElementById('project-wilaya-search');
+                if (searchInput) {
+                  searchInput.focus();
+                  searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+              }}
+              className="flex items-center gap-2 px-6 py-3 border border-primary text-primary rounded-full font-label-md hover:bg-primary/5 transition-colors cursor-pointer"
+            >
               <span className="material-symbols-outlined text-[18px]">filter_list</span>
               Filter Requests
             </button>
@@ -271,6 +281,7 @@ export default function ProjectsPage() {
               location_on
             </span>
             <input
+              id="project-wilaya-search"
               type="text"
               value={wilayaSearch}
               onChange={(e) => setWilayaSearch(e.target.value)}

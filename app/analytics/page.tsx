@@ -303,14 +303,12 @@ export default function AnalyticsPage() {
                         <p className="text-[11px] text-on-surface-variant/40 mt-0.5">{visitor.timeLabel}</p>
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      disabled
-                      className="px-4 py-1.5 border border-outline-variant/40 rounded-full text-on-surface-variant/40 bg-surface-container-low/40 cursor-not-allowed text-[12px] font-bold self-start sm:self-center"
-                      title="Artisan profile preview coming soon"
+                    <Link
+                      href={`/profile/${visitor.id}`}
+                      className="px-4 py-1.5 border border-primary text-primary rounded-full hover:bg-primary hover:text-white transition-colors text-[12px] font-bold self-start sm:self-center inline-flex items-center"
                     >
                       View Profile
-                    </button>
+                    </Link>
                   </div>
                 ))}
               </div>

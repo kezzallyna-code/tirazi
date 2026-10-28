@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { OnboardingData } from './types';
+import { MACHINERY_EQUIPMENT_OPTIONS, validateEquipment } from '@/utils/equipment';
 
 interface Step3Props {
   data: OnboardingData;
@@ -36,6 +37,7 @@ const EXPERIENCE_LEVELS = [
 export function Step3({ data, updateData, onNext, onPrev }: Step3Props) {
   const [wilaya, setWilaya] = useState(data.wilaya || '');
   const [experience, setExperience] = useState(data.experience || '');
+  const [equipment, setEquipment] = useState<string[]>(data.equipment || []);
   const [error, setError] = useState<string | null>(null);
 
   const handleNext = () => {
@@ -47,7 +49,7 @@ export function Step3({ data, updateData, onNext, onPrev }: Step3Props) {
       setError('Experience level is required.');
       return;
     }
-    updateData({ wilaya, experience });
+    updateData({ wilaya, experience, equipment: validateEquipment(equipment) });
     onNext();
   };
 
@@ -127,6 +129,48 @@ export function Step3({ data, updateData, onNext, onPrev }: Step3Props) {
           </div>
         </div>
 
+        {/* Machinery & Equipment (Task 4: Profile Creation) */}
+        <div className="space-y-3 pt-3 border-t border-outline-variant/20">
+          <div className="flex items-center justify-between">
+            <label className="font-label-md text-label-md text-on-surface-variant block font-bold">
+              Atelier Machinery & Equipment (Optional)
+            </label>
+            <span className="text-xs text-primary font-semibold">
+              {equipment.length} selected
+            </span>
+          </div>
+          <p className="text-xs text-on-surface-variant/80">
+            Select specialized machines available in your atelier to showcase your technical capability.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
+            {MACHINERY_EQUIPMENT_OPTIONS.map((item) => {
+              const isChecked = equipment.includes(item);
+              return (
+                <label
+                  key={item}
+                  className={`p-2.5 rounded-xl border flex items-center gap-2.5 cursor-pointer text-xs transition-all ${
+                    isChecked
+                      ? 'bg-primary/5 border-primary/40 text-primary font-medium'
+                      : 'border-outline-variant/40 hover:bg-surface-container-lowest text-on-surface'
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={isChecked}
+                    onChange={() => {
+                      setEquipment((prev) =>
+                        prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item]
+                      );
+                    }}
+                    className="w-3.5 h-3.5 rounded border-outline-variant text-primary focus:ring-primary shrink-0"
+                  />
+                  <span className="leading-tight">{item}</span>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+
         {error && (
           <span className="text-xs text-error font-medium flex items-center gap-1">
             <span className="material-symbols-outlined text-[14px]">error</span>
@@ -140,7 +184,7 @@ export function Step3({ data, updateData, onNext, onPrev }: Step3Props) {
           className="flex-1 border border-outline hover:bg-surface-container-low text-on-surface font-label-md text-label-md py-4 rounded-full transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
           type="button"
           onClick={() => {
-            updateData({ wilaya, experience });
+            updateData({ wilaya, experience, equipment: validateEquipment(equipment) });
             onPrev();
           }}
         >

@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 
 interface Comment {
   id: string;
@@ -62,20 +63,32 @@ export function GuestCommunityPreview({ post }: { post: Post }) {
         <span>{post.comments.length} comments</span>
       </div>
 
-      {/* Disabled Interaction Buttons */}
+      {/* Interaction Buttons linking to Join / Login */}
       <div className="flex items-center justify-between gap-1 pt-1">
-        <button disabled className="flex-grow py-2 px-3 rounded-xl flex items-center justify-center gap-2 text-on-surface-variant/40 bg-surface-container-low/50 cursor-not-allowed text-[12px] font-bold">
+        <Link 
+          href="/register" 
+          title="Join TIRAZY to appreciate this post"
+          className="flex-grow py-2 px-3 rounded-xl flex items-center justify-center gap-2 text-on-surface-variant/80 hover:text-primary hover:bg-surface-container transition-colors text-[12px] font-bold"
+        >
           <span className="material-symbols-outlined text-[16px]">thumb_up</span>
           Appreciate
-        </button>
-        <button disabled className="flex-grow py-2 px-3 rounded-xl flex items-center justify-center gap-2 text-on-surface-variant/40 bg-surface-container-low/50 cursor-not-allowed text-[12px] font-bold">
+        </Link>
+        <Link 
+          href="/register" 
+          title="Join TIRAZY to comment on this post"
+          className="flex-grow py-2 px-3 rounded-xl flex items-center justify-center gap-2 text-on-surface-variant/80 hover:text-primary hover:bg-surface-container transition-colors text-[12px] font-bold"
+        >
           <span className="material-symbols-outlined text-[16px]">chat_bubble</span>
           Comment
-        </button>
-        <button disabled className="flex-grow py-2 px-3 rounded-xl flex items-center justify-center gap-2 text-on-surface-variant/40 bg-surface-container-low/50 cursor-not-allowed text-[12px] font-bold">
+        </Link>
+        <Link 
+          href="/register" 
+          title="Join TIRAZY to save this post"
+          className="flex-grow py-2 px-3 rounded-xl flex items-center justify-center gap-2 text-on-surface-variant/80 hover:text-primary hover:bg-surface-container transition-colors text-[12px] font-bold"
+        >
           <span className="material-symbols-outlined text-[16px]">bookmark</span>
           Save
-        </button>
+        </Link>
       </div>
     </div>
   );

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { UserPreviewSidebar } from '@/components/user-preview/UserPreviewSidebar';
 import { UserOverview } from '@/components/user-preview/UserOverview';
 import { createClient } from '@/utils/supabase/client';
@@ -19,6 +20,7 @@ interface Project {
 }
 
 function UserPreviewPageContent() {
+  const router = useRouter();
   const { posts, savedPostIds } = useExplore();
   const [activeTab, setActiveTab] = useState<string>('overview');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -32,6 +34,7 @@ function UserPreviewPageContent() {
     experience: string;
     bio: string;
     avatarUrl: string;
+    availabilityStatus?: string;
   }>({
     fullName: '',
     roles: [],
@@ -39,6 +42,7 @@ function UserPreviewPageContent() {
     experience: '',
     bio: '',
     avatarUrl: '/images/default-avatar.png',
+    availabilityStatus: 'unavailable',
   });
 
   const [projects, setProjects] = useState<Project[]>([]);
@@ -66,12 +70,26 @@ function UserPreviewPageContent() {
             experience_level,
             subscription_plan,
             avatar_url,
+            availability_status,
             profile_roles (
               roles ( name )
             )
           `)
           .eq('id', session.user.id)
           .single();
+
+        let localStatus = 'unavailable';
+        if (typeof window !== 'undefined') {
+          try {
+            const raw = localStorage.getItem('tirazy_profile_extra');
+            if (raw) {
+              const parsed = JSON.parse(raw);
+              if (parsed.availability_status) localStatus = parsed.availability_status;
+            }
+          } catch {
+            // ignore
+          }
+        }
 
         if (profileData) {
           setProfile({
@@ -81,6 +99,7 @@ function UserPreviewPageContent() {
             experience: profileData.experience_level || 'Experienced',
             bio: profileData.bio || 'Passionate about textile arts.',
             avatarUrl: profileData.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=256',
+            availabilityStatus: profileData.availability_status || localStatus,
           });
           setSelectedPlan(profileData.subscription_plan || 'free');
         }
@@ -212,7 +231,7 @@ function UserPreviewPageContent() {
             userData={profile}
             selectedPlan={selectedPlan}
             userProjects={projects}
-            onPublishProject={() => showToast('Project publishing will be available soon.')}
+            onPublishProject={() => router.push('/publish')}
             showToast={showToast}
           />
         );
@@ -260,12 +279,12 @@ function UserPreviewPageContent() {
                   >
                     Edit Profile
                   </Link>
-                  <button
-                    onClick={() => showToast('Public profile view will be available in production.')}
-                    className="px-5 py-2 border border-outline rounded-full text-on-surface hover:bg-surface-container-low transition-colors font-label-md text-xs cursor-pointer"
+                  <Link
+                    href={currentUserId ? `/profile/${currentUserId}` : '/profile'}
+                    className="px-5 py-2 border border-outline rounded-full text-on-surface hover:bg-surface-container-low transition-colors font-label-md text-xs cursor-pointer inline-flex items-center"
                   >
                     View Public Profile
-                  </button>
+                  </Link>
                 </div>
               </div>
 
@@ -320,7 +339,7 @@ function UserPreviewPageContent() {
                         <div className="flex gap-1.5">
                           <button
                             type="button"
-                            onClick={() => showToast('Project editing will be available soon.')}
+                            onClick={() => router.push('/publish')}
                             className="p-1.5 border border-outline-variant rounded-full text-on-surface hover:bg-surface-container transition-colors cursor-pointer"
                             title="Edit project"
                           >

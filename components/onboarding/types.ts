@@ -10,4 +10,5 @@ export interface OnboardingData {
   avatarFileName?: string;
   avatarFile?: File;
   selectedPlan?: string;
+  equipment?: string[];
 }

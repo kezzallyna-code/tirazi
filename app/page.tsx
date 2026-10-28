@@ -24,7 +24,9 @@ export default function HomePage() {
 <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
                     Elevating Algerian Craft
                 </div>
-<Link href="/"><Logo className="h-12 w-auto object-contain" /></Link>
+<h1 className="font-display text-display-lg-mobile md:text-display-lg lg:text-[54px] lg:leading-[1.15] text-primary mb-4 font-bold">
+  Connect, verify, and collaborate across 69 wilayas
+</h1>
 <p className="font-headline-md text-headline-md text-secondary-container font-arabic mb-8 italic" dir="rtl">
                     مصمم... وأكثر
                 </p>
@@ -110,9 +112,9 @@ export default function HomePage() {
 <p className="font-label-md text-label-md text-on-surface-variant">Creative Director</p>
 </div>
 </div>
-<button className="px-8 py-4 bg-transparent border border-outline text-on-surface font-label-md text-label-md rounded-full hover:bg-surface-container-high transition-all">
+<Link href="/profile/artisan-zahra" className="px-8 py-4 bg-transparent border border-outline text-on-surface font-label-md text-label-md rounded-full hover:bg-surface-container-high transition-all inline-block">
                         View Portfolio
-                    </button>
+                    </Link>
 </div>
 </div>
 </section>
@@ -134,9 +136,9 @@ export default function HomePage() {
 <div className="pt-12 border-t border-on-primary/20 flex flex-col md:flex-row justify-between items-center gap-6">
 <p className="font-label-md text-label-md opacity-60">© 2024 TIRAZY. All rights reserved.</p>
 <div className="flex gap-8 font-label-md text-label-md opacity-80">
-<Link className="hover:text-secondary-fixed transition-colors" href="#">Privacy</Link>
-<Link className="hover:text-secondary-fixed transition-colors" href="#">Terms</Link>
-<Link className="hover:text-secondary-fixed transition-colors" href="#">Contact</Link>
+<Link className="hover:text-secondary-fixed transition-colors" href="/contact#privacy">Privacy</Link>
+<Link className="hover:text-secondary-fixed transition-colors" href="/contact#terms">Terms</Link>
+<Link className="hover:text-secondary-fixed transition-colors" href="/contact">Contact</Link>
 </div>
 </div>
 </div>

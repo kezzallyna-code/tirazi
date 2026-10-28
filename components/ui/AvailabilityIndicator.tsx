@@ -12,17 +12,17 @@ interface AvailabilityIndicatorProps {
 export const AVAILABILITY_CONFIG: Record<AvailabilityStatus, { label: string; dotClass: string; textClass: string }> = {
   available: {
     label: 'Available',
-    dotClass: 'bg-emerald-500 ring-white',
+    dotClass: 'bg-emerald-500 ring-white dark:ring-surface-container-low',
     textClass: 'text-emerald-700 dark:text-emerald-400',
   },
   busy: {
     label: 'Busy',
-    dotClass: 'bg-amber-500 ring-white',
-    textClass: 'text-amber-700 dark:text-amber-400',
+    dotClass: 'bg-orange-500 ring-white dark:ring-surface-container-low',
+    textClass: 'text-orange-700 dark:text-orange-400',
   },
   unavailable: {
     label: 'Unavailable',
-    dotClass: 'bg-gray-400 ring-white',
+    dotClass: 'bg-gray-400 ring-white dark:ring-surface-container-low',
     textClass: 'text-gray-500 dark:text-gray-400',
   },
 };

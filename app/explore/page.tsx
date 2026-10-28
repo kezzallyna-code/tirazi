@@ -26,6 +26,15 @@ export default function ExploreFeedPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterPostType, setFilterPostType] = useState<string>('All');
   
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const postsPerPage = 4;
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, filterPostType, activeCategory]);
+
   // Post composer state
   const [isExpanded, setIsExpanded] = useState(false);
   const [composerText, setComposerText] = useState('');
@@ -155,6 +164,10 @@ export default function ExploreFeedPage() {
 
     return matchesSearch && matchesCategory && matchesType;
   });
+
+  const totalPages = Math.ceil(filteredPosts.length / postsPerPage) || 1;
+  const startIndex = (currentPage - 1) * postsPerPage;
+  const paginatedPosts = filteredPosts.slice(startIndex, startIndex + postsPerPage);
 
   if (!isInitialized) {
     return (
@@ -374,9 +387,64 @@ export default function ExploreFeedPage() {
       {/* Feed list */}
       {filteredPosts.length > 0 ? (
         <div className="space-y-6">
-          {filteredPosts.map((post) => (
+          {paginatedPosts.map((post) => (
             <PostCard key={post.id} post={post} />
           ))}
+
+          {/* Pagination Controls */}
+          {filteredPosts.length > postsPerPage && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white dark:bg-surface-container-low p-5 rounded-[24px] border border-outline-variant/30 shadow-sm">
+              <div className="text-[13px] text-on-surface-variant font-label-md">
+                Showing <span className="font-bold text-on-surface">{startIndex + 1}</span>–<span className="font-bold text-on-surface">{Math.min(startIndex + postsPerPage, filteredPosts.length)}</span> of <span className="font-bold text-primary">{filteredPosts.length}</span> posts
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCurrentPage((prev) => Math.max(prev - 1, 1));
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  disabled={currentPage === 1}
+                  className="px-3.5 py-2 rounded-xl border border-outline-variant/40 font-label-md text-[13px] text-on-surface hover:bg-surface-variant/40 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-1 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[16px]">chevron_left</span>
+                  Previous
+                </button>
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNumber) => (
+                  <button
+                    key={pageNumber}
+                    type="button"
+                    onClick={() => {
+                      setCurrentPage(pageNumber);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className={`w-9 h-9 rounded-xl font-label-md text-[13px] font-bold transition-all cursor-pointer ${
+                      currentPage === pageNumber
+                        ? 'bg-primary text-white shadow-sm'
+                        : 'text-on-surface hover:bg-surface-variant/40 border border-outline-variant/20'
+                    }`}
+                  >
+                    {pageNumber}
+                  </button>
+                ))}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  disabled={currentPage === totalPages}
+                  className="px-3.5 py-2 rounded-xl border border-outline-variant/40 font-label-md text-[13px] text-on-surface hover:bg-surface-variant/40 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-1 cursor-pointer"
+                >
+                  Next
+                  <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         <div className="bg-white dark:bg-surface-container-low p-12 rounded-[24px] border border-outline-variant/20 shadow-sm text-center">

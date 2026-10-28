@@ -12,6 +12,26 @@ export const MACHINERY_EQUIPMENT_OPTIONS = [
 
 export type MachineryEquipmentOption = (typeof MACHINERY_EQUIPMENT_OPTIONS)[number];
 
+export const TIRAZY_CONTACT = {
+  phone: '0562755633',
+  phoneDisplay: '0562 75 56 33',
+  phoneInternational: '+213 562 75 56 33',
+  whatsappNumber: '213562755633',
+  whatsappUrl: 'https://wa.me/213562755633',
+  email: 'tirazynetwork@gmail.com',
+  mailtoUrl: 'mailto:tirazynetwork@gmail.com',
+  telUrl: 'tel:+213562755633',
+} as const;
+
+/**
+ * Validate selected machinery equipment against the approved list of 9 options.
+ */
+export function validateEquipment(selected: unknown): MachineryEquipmentOption[] {
+  if (!Array.isArray(selected)) return [];
+  const allowedSet = new Set<string>(MACHINERY_EQUIPMENT_OPTIONS);
+  return selected.filter((item): item is MachineryEquipmentOption => typeof item === 'string' && allowedSet.has(item));
+}
+
 /**
  * Format Algerian and international phone numbers for WhatsApp and Tel links.
  * WhatsApp wa.me requires international country code with no +, spaces, dashes, or punctuation.
@@ -29,13 +49,19 @@ export function formatPhoneNumber(phone: string | null | undefined): {
   }
 
   const trimmed = phone.trim();
-  const digits = trimmed.replace(/\D/g, '');
+  // Strip all non-digit characters
+  let digits = trimmed.replace(/\D/g, '');
+
+  // Strip leading international double zeroes (00213... -> 213...)
+  if (digits.startsWith('00')) {
+    digits = digits.slice(2);
+  }
 
   if (digits.length < 8) {
     return { raw: trimmed, tel: '', whatsapp: '', isValid: false };
   }
 
-  // Format for WhatsApp: must start with country code
+  // Format for WhatsApp: must start with country code, no + or punctuation
   let whatsappDigits = digits;
   if (whatsappDigits.startsWith('0') && whatsappDigits.length === 10) {
     // Standard Algerian number starting with 0: replace 0 with 213
@@ -45,10 +71,12 @@ export function formatPhoneNumber(phone: string | null | undefined): {
     whatsappDigits = '213' + whatsappDigits;
   }
 
-  // Format for Tel:
+  // Format for Tel: device calling interface
   let tel = trimmed;
   if (!tel.startsWith('+') && !tel.startsWith('00') && whatsappDigits.startsWith('213')) {
     tel = '+' + whatsappDigits;
+  } else if (!tel.startsWith('+') && !tel.startsWith('00')) {
+    tel = '+' + digits;
   }
 
   return {
@@ -58,3 +86,4 @@ export function formatPhoneNumber(phone: string | null | undefined): {
     isValid: true,
   };
 }
+

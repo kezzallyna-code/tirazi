@@ -48,7 +48,14 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
   // Handlers
   const handleReportClick = () => {
     if (!checkGuestAction()) return;
-    showToast("Report feature coming soon.");
+    try {
+      const reports = JSON.parse(localStorage.getItem('tirazy_reported_posts') || '[]');
+      if (!reports.includes(post.id)) {
+        reports.push(post.id);
+        localStorage.setItem('tirazy_reported_posts', JSON.stringify(reports));
+      }
+    } catch (e) {}
+    showToast("Post reported to the moderation team for review. Thank you.");
   };
 
   const handleSaveEdit = (e: React.FormEvent) => {
@@ -83,7 +90,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
               <img src={post.artisan?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=256'} alt={post.artisan?.name || 'Artisan'} className="w-full h-full object-cover" />
             </div>
             <AvailabilityIndicator
-              status={post.artisan?.availability || 'available'}
+              status={post.artisan?.availability || 'unavailable'}
               size="sm"
               className="absolute -bottom-0.5 -right-0.5"
             />

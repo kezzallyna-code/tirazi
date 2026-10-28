@@ -6,7 +6,6 @@ export default function MessagesPage() {
   return (
     <div className="stitch-screen-wrapper">
 
-
       <div className="flex pt-16 h-screen">
 
         <aside className="h-screen w-64 fixed left-0 top-0 pt-20 bg-surface-container-low dark:bg-surface-dim flex flex-col gap-2 p-4 hidden lg:flex overflow-y-auto custom-scrollbar pb-6">
@@ -15,10 +14,13 @@ export default function MessagesPage() {
             <p className="font-label-md text-label-md text-on-surface-variant">Algiers, DZ</p>
           </div>
 
-          <button className="mt-auto bg-primary text-on-primary py-3 px-4 rounded-full font-label-md hover:opacity-90 transition-all flex items-center justify-center gap-2 mb-4">
+          <Link 
+            href="/publish" 
+            className="mt-auto bg-primary text-on-primary py-3 px-4 rounded-full font-label-md hover:opacity-90 transition-all flex items-center justify-center gap-2 mb-4"
+          >
             <span className="material-symbols-outlined text-sm" data-icon="add">add</span>
             Publish Project
-          </button>
+          </Link>
         </aside>
 
         <main className="lg:ml-64 flex-grow h-full bg-background relative overflow-hidden flex">
@@ -28,9 +30,13 @@ export default function MessagesPage() {
             <div className="p-6 border-b border-outline-variant/30">
               <div className="flex items-center justify-between mb-6">
                 <h1 className="font-headline-sm text-headline-sm text-on-surface">Messages</h1>
-                <button className="p-2 bg-primary text-white hover:bg-primary-dark rounded-full transition-colors shadow-sm">
+                <Link 
+                  href="/artisans" 
+                  title="Browse artisans to start a conversation" 
+                  className="p-2 bg-primary text-white hover:bg-primary-dark rounded-full transition-colors shadow-sm inline-flex items-center justify-center"
+                >
                   <span className="material-symbols-outlined text-[20px]" data-icon="edit_square">edit_square</span>
-                </button>
+                </Link>
               </div>
               <div className="relative">
                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm" data-icon="search">search</span>
@@ -53,10 +59,13 @@ export default function MessagesPage() {
             <p className="font-body-md text-on-surface-variant max-w-md leading-relaxed">
               Select a conversation from the sidebar or start a new one to begin messaging with other professionals in the TIRAZY network.
             </p>
-            <button className="mt-8 px-6 py-3 bg-primary text-on-primary rounded-full font-label-md shadow-md hover:shadow-lg active:scale-95 transition-all flex items-center gap-2">
+            <Link 
+              href="/artisans" 
+              className="mt-8 px-6 py-3 bg-primary text-on-primary rounded-full font-label-md shadow-md hover:shadow-lg active:scale-95 transition-all flex items-center gap-2"
+            >
               <span className="material-symbols-outlined text-[20px]" data-icon="edit_square">edit_square</span>
               New Message
-            </button>
+            </Link>
           </section>
         </main>
       </div>

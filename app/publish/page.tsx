@@ -15,6 +15,28 @@ export default function PublishPage() {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [skills, setSkills] = useState<string[]>(['Silk Weaving', 'Gold Thread', 'Velvet Work']);
+  const [selectedSkills, setSelectedSkills] = useState<string[]>(['Silk Weaving', 'Gold Thread']);
+  const [isPublic, setIsPublic] = useState(true);
+
+  const toggleSkill = (skill: string) => {
+    setSelectedSkills(prev => 
+      prev.includes(skill) ? prev.filter(s => s !== skill) : [...prev, skill]
+    );
+  };
+
+  const handleAddSkill = () => {
+    const newSkill = window.prompt("Enter new craft skill:");
+    if (newSkill && newSkill.trim()) {
+      const trimmed = newSkill.trim();
+      if (!skills.includes(trimmed)) {
+        setSkills(prev => [...prev, trimmed]);
+      }
+      if (!selectedSkills.includes(trimmed)) {
+        setSelectedSkills(prev => [...prev, trimmed]);
+      }
+    }
+  };
 
   React.useEffect(() => {
     const fetchCategories = async () => {
@@ -36,7 +58,7 @@ export default function PublishPage() {
     }
   };
 
-  const handlePublish = async () => {
+  const handlePublish = async (isDraft: boolean = false) => {
     if (!title.trim() || !description.trim()) {
       alert('Please fill in the project title and description.');
       return;
@@ -62,7 +84,7 @@ export default function PublishPage() {
           description,
           category_id: category || null,
           wilaya: 'Alger', // default wilaya
-          status: 'approved'
+          status: isDraft ? 'draft' : 'approved'
         })
         .select()
         .single();
@@ -95,11 +117,11 @@ export default function PublishPage() {
         }
       }
 
-      alert('Project published successfully!');
+      alert(isDraft ? 'Project saved as private draft!' : 'Project published successfully!');
       router.push('/projects');
     } catch (error: any) {
-      console.error('Error publishing project:', error);
-      alert('Failed to publish project: ' + error.message);
+      console.error('Error saving project:', error);
+      alert('Failed to save project: ' + error.message);
     } finally {
       setIsPublishing(false);
     }
@@ -186,10 +208,30 @@ export default function PublishPage() {
 <div>
 <label className="block font-label-md text-label-md mb-3 text-on-surface-variant">Craft Expertise Tags</label>
 <div className="flex flex-wrap gap-2">
-<button className="px-4 py-1.5 rounded-full bg-primary/10 text-primary font-label-md text-label-md border border-primary/20 hover:bg-primary hover:text-white transition-all">Silk Weaving</button>
-<button className="px-4 py-1.5 rounded-full bg-primary/10 text-primary font-label-md text-label-md border border-primary/20 hover:bg-primary hover:text-white transition-all">Gold Thread</button>
-<button className="px-4 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-md text-label-md border border-outline-variant hover:border-primary transition-all">Velvet Work</button>
-<button className="px-4 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-md text-label-md border border-outline-variant hover:border-primary transition-all">+ Add Skill</button>
+{skills.map((skill) => {
+  const isSelected = selectedSkills.includes(skill);
+  return (
+    <button
+      key={skill}
+      type="button"
+      onClick={() => toggleSkill(skill)}
+      className={`px-4 py-1.5 rounded-full font-label-md text-label-md border transition-all cursor-pointer ${
+        isSelected
+          ? 'bg-primary text-white border-primary shadow-sm font-bold'
+          : 'bg-surface-container-high text-on-surface-variant border-outline-variant hover:border-primary'
+      }`}
+    >
+      {skill}
+    </button>
+  );
+})}
+<button
+  type="button"
+  onClick={handleAddSkill}
+  className="px-4 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-md text-label-md border border-outline-variant hover:border-primary transition-all cursor-pointer"
+>
+  + Add Skill
+</button>
 </div>
 </div>
 
@@ -198,11 +240,18 @@ export default function PublishPage() {
 <span className="material-symbols-outlined text-primary">public</span>
 <div>
 <p className="font-label-md text-label-md">Professional Visibility</p>
-<p className="text-[12px] text-on-surface-variant">Visible to all Network Partners</p>
+<p className="text-[12px] text-on-surface-variant">{isPublic ? 'Visible to all Network Partners' : 'Private to your atelier'}</p>
 </div>
 </div>
-<div className="relative inline-block w-12 h-6 rounded-full bg-primary transition-colors cursor-pointer">
-<div className="absolute right-1 top-1 w-4 h-4 rounded-full bg-white"></div>
+<div 
+  onClick={() => setIsPublic(!isPublic)}
+  className={`relative inline-block w-12 h-6 rounded-full transition-colors cursor-pointer ${
+    isPublic ? 'bg-primary' : 'bg-outline-variant'
+  }`}
+>
+<div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${
+  isPublic ? 'right-1' : 'left-1'
+}`}></div>
 </div>
 </div>
 
@@ -217,18 +266,24 @@ export default function PublishPage() {
 
 <div className="pt-4 space-y-3">
 <button 
-  onClick={handlePublish}
+  type="button"
+  onClick={() => handlePublish(false)}
   disabled={isPublishing}
-  className="w-full py-4 bg-primary text-white rounded-full font-label-md text-label-md shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+  className="w-full py-4 bg-primary text-white rounded-full font-label-md text-label-md shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
 >
 <span className="material-symbols-outlined" data-weight="fill">
   {isPublishing ? 'hourglass_empty' : 'send'}
 </span>
-                                {isPublishing ? 'Publishing...' : 'Publish Project'}
-                            </button>
-<button className="w-full py-4 border border-secondary text-secondary rounded-full font-label-md text-label-md hover:bg-secondary/5 transition-all">
-                                Save as Private Draft
-                            </button>
+  {isPublishing ? 'Publishing...' : 'Publish Project'}
+</button>
+<button 
+  type="button"
+  onClick={() => handlePublish(true)}
+  disabled={isPublishing}
+  className="w-full py-4 border border-secondary text-secondary rounded-full font-label-md text-label-md hover:bg-secondary/5 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+>
+  Save as Private Draft
+</button>
 </div>
 </div>
 </div>
@@ -252,9 +307,9 @@ export default function PublishPage() {
                 © 2024 TIRAZY. Artisan Network of Algeria.
             </div>
 <div className="flex gap-8">
-<Link className="text-on-surface-variant hover:text-primary transition-colors text-label-md font-label-md" href="#">Privacy Standards</Link>
-<Link className="text-on-surface-variant hover:text-primary transition-colors text-label-md font-label-md" href="#">Terms of Craft</Link>
-<Link className="text-on-surface-variant hover:text-primary transition-colors text-label-md font-label-md" href="#">Support</Link>
+<Link className="text-on-surface-variant hover:text-primary transition-colors text-label-md font-label-md" href="/contact#privacy">Privacy Standards</Link>
+<Link className="text-on-surface-variant hover:text-primary transition-colors text-label-md font-label-md" href="/contact#terms">Terms of Craft</Link>
+<Link className="text-on-surface-variant hover:text-primary transition-colors text-label-md font-label-md" href="/contact">Support</Link>
 </div>
 </div>
 </footer>

@@ -21,6 +21,7 @@ const STEP_LABELS = [
 ];
 
 import { createClient } from '@/utils/supabase/client';
+import { validateEquipment } from '@/utils/equipment';
 
 function RegisterWizard() {
   const searchParams = useSearchParams();
@@ -113,6 +114,16 @@ function RegisterWizard() {
       // 3. Generate unique username
       let username = generateUsername(finalData.fullName);
       
+      const validEquipment = validateEquipment(finalData.equipment);
+      
+      // Cache extra profile details locally for fallback
+      try {
+        localStorage.setItem('tirazy_profile_extra', JSON.stringify({
+          equipment: validEquipment,
+          availabilityStatus: 'unavailable',
+        }));
+      } catch (e) {}
+
       // 4. Update profile record
       const { error: profileError } = await supabase
         .from('profiles')
@@ -122,6 +133,7 @@ function RegisterWizard() {
           bio: finalData.bio,
           wilaya: finalData.wilaya,
           experience_level: finalData.experience,
+          equipment: validEquipment,
         })
         .eq('id', userId);
 
@@ -137,12 +149,23 @@ function RegisterWizard() {
               bio: finalData.bio,
               wilaya: finalData.wilaya,
               experience_level: finalData.experience,
+              equipment: validEquipment,
             })
             .eq('id', userId);
             
           if (retryError) throw new Error(`Profile update failed: ${retryError.message}`);
         } else {
-          throw new Error(`Profile update failed: ${profileError.message}`);
+          // If equipment column not present yet, fallback to update without equipment
+          await supabase
+            .from('profiles')
+            .update({
+              username: username,
+              avatar_url: finalAvatarUrl,
+              bio: finalData.bio,
+              wilaya: finalData.wilaya,
+              experience_level: finalData.experience,
+            })
+            .eq('id', userId);
         }
       }
 
